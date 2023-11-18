@@ -1,0 +1,20 @@
+name: Lint code & compile test
+
+
+on:
+  release:
+    types: [created]
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "**"
+    paths:
+      - "Dockerfile"
+
+jobs:
+  docker:
+    uses: kakushindev/workflows/.github/workflows/lint-and-compile-test.yml@main
+    secrets: inherit
+    
