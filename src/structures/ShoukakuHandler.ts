@@ -10,7 +10,7 @@ import { LavalinkSource } from "lavalink-api-types";
 import { cast } from "@sapphire/utilities";
 
 export class ShoukakuHandler extends Shoukaku {
-    public readonly queue: Collection<string, Dispatcher> = new Collection();
+    public readonly queue = new Collection<string, Dispatcher>();
     public constructor(public readonly client: Venti) {
         super(new Connectors.DiscordJS(client), lavalink.servers, lavalink.options);
     }
