@@ -36,7 +36,7 @@ export class EmbedPlayer {
         if (!this.textChannel || !this.message) return;
         if (this.message.editable && this.dispatcher.player) {
             if (this.dispatcher.queue.length) {
-                const list = Util.chunk(this.dispatcher.queue.queued.map((x, i) => `${++i}. ${x.info.author} - ${x.displayTitle} [${x.info.isStream ? "LIVE" : Util.readableTime(x.info.length)}] ~ <@${x.requester}>`), 10);
+                const list = Util.chunk(this.dispatcher.queue.queued.map((x, i) => `${this.dispatcher.queue.queued.length - i}. ${x.info.author} - ${x.displayTitle} [${x.info.isStream ? "LIVE" : Util.readableTime(x.info.length)}] ~ <@${x.requester}>`), 10);
                 const currentSong = this.dispatcher.queue[0];
                 const image = currentSong.displayThumbnail
                     ? await get(currentSong.displayThumbnail).then(() => currentSong.displayThumbnail).catch(() => Images.DEFAULT_BANNER)
