@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@discordjs/builders": "^1.6.3",
-    "@frutbits/pino-logger": "^3.2.1",
+    "@frutbits/pino-logger": "^4.0.0",
     "@lavalink/encoding": "^0.1.2",
     "@prisma/client": "^4.16.2",
     "@sapphire/decorators": "^5.0.0",
