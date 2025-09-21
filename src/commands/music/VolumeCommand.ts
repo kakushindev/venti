@@ -62,7 +62,7 @@ export class VolumeCommand extends Command {
                 ]
             });
         }
-        await dispatcher?.player?.setGlobalVolume(volume / 100);
+        await dispatcher?.player?.setGlobalVolume(volume * 100);
         await ctx.send({
             embeds: [
                 Util.createEmbed("success", `🔊 **|** Changed current volume to ${volume}%`)
