@@ -1,21 +1,16 @@
 {
-    "compilerOptions": {
-        "target": "ES2021",
-        "module": "ES2022",
-        "moduleResolution": "node",
-        "lib": ["ES2021"],
-        "strict": true,
-        "outDir": "dist",
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "skipLibCheck": true,
-        "noEmitHelpers": true,
-        "importHelpers": true,
-        "resolveJsonModule": true,
-        "typeRoots": ["node_modules/@types", "src/typings"]
-    },
-    "exclude": [],
-    "include": ["src/**/*"]
+	"extends": ["@tsconfig/node20"],
+	"compilerOptions": {
+		"outDir": "./dist",
+		"baseUrl": ".",
+		"strict": true,
+		"verbatimModuleSyntax": false,
+		"noUncheckedIndexedAccess": false,
+        "moduleResolution": "nodenext"
+	},
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.d.ts",
+	],
+	"exclude": ["**/node_modules", "**/.*/", "dist"]
 }
