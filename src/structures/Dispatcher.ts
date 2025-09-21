@@ -115,7 +115,10 @@ export class Dispatcher {
     }
 
     public destroy(): void {
-        if (this.player) void this.player.destroy();
+        if (this.player) {
+            void this.player.destroy();
+            void this.client.shoukaku.leaveVoiceChannel(this.guild.id);
+        }
         this.oldMusicMessage = null;
         this.oldVoiceStateUpdateMessage = null;
         Object.assign(this, { queue: [] });
