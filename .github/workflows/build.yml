@@ -14,6 +14,8 @@ on:
 
 jobs:
   docker:
-    uses: kakushindev/workflows/.github/workflows/build-docker-image.yml@main
+    permissions:
+      packages: write
+      contents: read
+    uses: ict-neskar/workflows/.github/workflows/build-docker.yaml@main
     secrets: inherit
-    
