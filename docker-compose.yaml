@@ -1,0 +1,16 @@
+services:
+  lavalink:
+    # pin the image version to Lavalink v4 and use the alpine variant for a smaller image size
+    image: ghcr.io/lavalink-devs/lavalink:4-alpine
+    container_name: lavalink
+    restart: unless-stopped
+    environment:
+      - _JAVA_OPTIONS=-Xmx4G
+      - SERVER_PORT=2333
+      - LAVALINK_SERVER_PASSWORD=youshallnotpass
+    volumes:
+      - ./application.yml:/opt/Lavalink/application.yml
+      # persist plugins between restarts, make sure to create the folder & set the correct permissions and user/group id mentioned above
+      - ./plugins/:/opt/Lavalink/plugins/
+    ports:
+      - "2333:2333"
