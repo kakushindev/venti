@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable typescript/no-unsafe-enum-comparison */
+import { setTimeout } from "node:timers";
 import type { Events, MessageCommandDeniedPayload, UserError } from "@sapphire/framework";
 import { Identifiers, Listener } from "@sapphire/framework";
-import { APIEmbed, ChannelType, MessageCreateOptions, type PermissionsString } from "discord.js";
+import type { APIEmbed, MessageCreateOptions, PermissionsString } from "discord.js";
 import { Util } from "../../../utils/Util.js";
 
 export class MessageCommandDeniedListener extends Listener<typeof Events.MessageCommandDenied> {
@@ -35,6 +36,7 @@ export class MessageCommandDeniedListener extends Listener<typeof Events.Message
             ...payload,
             allowedMentions: { users: [message.author.id], roles: [] }
         });
+        // eslint-disable-next-line unicorn/no-await-expression-member
         if ((await this.container.client.databases.guild.fetchGuildRequester(message.guildId!)).channel === message.channelId) {
             setTimeout(async () => {
                 if (msg.deletable) await msg.delete();

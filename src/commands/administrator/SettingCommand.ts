@@ -1,12 +1,13 @@
+import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
 import { ApplyOptions } from "@sapphire/decorators";
 import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
 import { Command, RegisterBehavior } from "@sapphire/framework";
-import { ApplicationCommandOptionType, ButtonStyle, GuildCacheMessage, type ApplicationCommandOptionData, type ChatInputCommandInteraction, type Message, type TextChannel } from "discord.js";
+import { ApplicationCommandOptionType, ButtonStyle } from "discord.js";
+import type { GuildCacheMessage, ApplicationCommandOptionData, ChatInputCommandInteraction, TextChannel } from "discord.js";
 import { devGuilds, isDev, prefix } from "../../config.js";
 import { CommandContext } from "../../structures/CommandContext.js";
 import { EmbedPlayer } from "../../utils/EmbedPlayer.js";
 import { Util } from "../../utils/Util.js";
-import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
 
 @ApplyOptions<Command.Options>({
     aliases: [],
@@ -57,7 +58,7 @@ export class SettingCommand extends Command {
 
     public async messageRun(message: GuildCacheMessage<"cached">, args: Args): Promise<any> {
         const cmd = await args.pickResult("string");
-        const value = cmd.unwrapOr(undefined);
+        const value = cmd.unwrapOr(null);
         const validCommands = this.commands.map(x => x.name);
         if (!value || !validCommands.includes(value.toLowerCase())) {
             return message.channel.send({
@@ -81,7 +82,7 @@ export class SettingCommand extends Command {
                         ]
                     });
                 }
-                if (!channel) channel = channelArgs as TextChannel;
+                channel ??= channelArgs as TextChannel;
                 const data = await this.container.client.databases.guild.get(ctx.context.guildId!, {
                     select: {
                         requester_channel: true,
@@ -90,10 +91,9 @@ export class SettingCommand extends Command {
                 });
                 const oldRequester = ctx.context.guild!.channels.cache.get(data.requester_channel!);
                 if (oldRequester?.isTextBased()) {
-                    const message = await oldRequester.messages.fetch(data.requester_message!).catch(() => {});
+                    const message = await oldRequester.messages.fetch(data.requester_message!).catch(() => null);
                     if (message) {
                         return ctx.send({
-                            // eslint-disable-next-line @typescript-eslint/no-base-to-string
                             embeds: [Util.createEmbed("error", `Already setup in ${oldRequester.toString()}`)]
                         });
                     }
@@ -144,7 +144,7 @@ export class SettingCommand extends Command {
                                         .setStyle(ButtonStyle.Success)
                                 )
                         ]
-                    }).catch((error: Error) => ({ error: error.message }));
+                    }).catch((error: unknown) => ({ error: (error as Error).message }));
                     if ("error" in msg) {
                         return ctx.send({
                             embeds: [
@@ -186,6 +186,14 @@ export class SettingCommand extends Command {
                 });
                 break;
             }
+            default:
+                return ctx.send({
+                    embeds: [
+                        Util.createEmbed("error", "An unknown error occurred. Please try again later.")
+                    ]
+                });
         }
+
+        return null;
     }
 }

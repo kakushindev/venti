@@ -43,8 +43,8 @@ export class SkipCommand extends Command {
                 dj_state: true
             }
         });
-        if (data.dj_state && // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            (ctx.context.member as GuildMember).roles.cache.some(x => (data.dj_roles || []).includes(x.id))) {
+        if (data.dj_state &&
+            (ctx.context.member as GuildMember).roles.cache.some(x => data.dj_roles.includes(x.id))) {
             if (!ctx.isInsideRequesterChannel) {
                 await ctx.send({
                     embeds: [Util.createEmbed("success", `Skipped **[${dispatcher.queue.currentTrack!.displayTitle}](${dispatcher.queue.currentTrack!.info.uri})**`)]

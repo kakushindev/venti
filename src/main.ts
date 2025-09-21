@@ -1,15 +1,21 @@
 // Sapphire Plugins
 import "@sapphire/plugin-editable-commands/register";
 
+import process from "node:process";
 import { BucketScope } from "@sapphire/framework";
 import "dotenv/config";
-import process from "node:process";
-import { devs, isDev, prefix } from "./config.js";
-import { Venti } from "./structures/Venti.js";
 import { IntentsBitField } from "discord.js";
+import { devs, prefix } from "./config.js";
+import { Venti } from "./structures/Venti.js";
 
 const client = new Venti({
-    intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.MessageContent, IntentsBitField.Flags.GuildVoiceStates, IntentsBitField.Flags.GuildMembers],
+    intents: [
+        IntentsBitField.Flags.Guilds,
+        IntentsBitField.Flags.GuildMessages,
+        IntentsBitField.Flags.MessageContent,
+        IntentsBitField.Flags.GuildVoiceStates,
+        IntentsBitField.Flags.GuildMembers
+    ],
     loadMessageCommandListeners: true,
     fetchPrefix: () => prefix,
     defaultCooldown: {
@@ -46,4 +52,4 @@ process.on("uncaughtException", e => {
     process.exit(1);
 });
 
-await client.login(process.env.DISCORD_TOKEN).catch(error => client.logger.error(error));
+await client.login(process.env.DISCORD_TOKEN).catch((error: unknown) => client.logger.error(error));

@@ -2,12 +2,13 @@ import { ApplyOptions } from "@sapphire/decorators";
 import type { ChatInputCommand, ChatInputCommandContext } from "@sapphire/framework";
 import { Events, Listener } from "@sapphire/framework";
 import type { ChatInputCommandInteraction, Interaction } from "discord.js";
+import { LoopType } from "../../structures/Dispatcher.js";
 
 @ApplyOptions<Listener.Options>({
     event: "interactionCreate"
 })
 export class InteractionCreateListener extends Listener {
-    public constructor(context: Listener.Context, options: Listener.Options) {
+    public constructor(context: Listener.LoaderContext, options: Listener.Options) {
         super(context, options);
     }
 
@@ -19,23 +20,25 @@ export class InteractionCreateListener extends Listener {
             if (dispatcher?.player?.paused && id[1] === "resumepause") id[1] = "resume";
             if (!dispatcher?.player?.paused && id[1] === "resumepause") id[1] = "pause";
             const command = this.container.stores.get("commands").get(id[1]) as ChatInputCommand | undefined;
-            if (!command) return;
+            if (!command) return null;
             const preconditionsResult = await command.preconditions.chatInputRun(interaction as unknown as ChatInputCommandInteraction, command, { command });
             const context: ChatInputCommandContext = {
                 commandName: command.name,
                 commandId: interaction.customId
             };
             if (!preconditionsResult.isOk()) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                // eslint-disable-next-line typescript/no-unsafe-argument
                 return this.container.client.emit(Events.ChatInputCommandDenied, preconditionsResult.unwrapErr(), { command, interaction } as any);
             }
             if (command.name === "loop") {
                 await interaction.deferUpdate();
                 const toChange = Number(dispatcher!.loopState) + 1;
-                dispatcher!.loopState = dispatcher?.loopState === 2 ? 0 : toChange;
+                dispatcher!.loopState = dispatcher?.loopState === LoopType.ONE ? 0 : toChange;
                 return dispatcher?.embedPlayer?.update();
             }
             return command.chatInputRun(interaction as unknown as ChatInputCommandInteraction, context);
         }
+
+        return null;
     }
 }

@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { TextDecoder } from "node:util";
 
 export default class DataInput {
@@ -6,9 +7,10 @@ export default class DataInput {
     private readonly view: DataView;
 
     public constructor(bytes: Uint8Array | string) {
-        if (typeof bytes === "string") bytes = new Uint8Array(Buffer.from(bytes, "base64"));
-        this.buf = bytes;
-        this.view = new DataView(bytes.buffer);
+        let result = bytes;
+        if (typeof bytes === "string") result = new Uint8Array(Buffer.from(bytes, "base64"));
+        this.buf = result as Uint8Array;
+        this.view = new DataView((result as Uint8Array).buffer);
     }
 
     public readBoolean(): boolean {
@@ -30,7 +32,7 @@ export default class DataInput {
     public readLong(): bigint {
         const msb = this.view.getInt32(this._advance(4), false);
         const lsb = this.view.getUint32(this._advance(4), false);
-        return BigInt(msb) << 32n | BigInt(lsb);
+        return (BigInt(msb) << 32n) | BigInt(lsb);
     }
 
     public readUTF(): string {

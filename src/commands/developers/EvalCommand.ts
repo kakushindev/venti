@@ -1,4 +1,6 @@
-import util from "node:util";
+/* eslint-disable typescript/no-unsafe-assignment */
+import { Buffer } from "node:buffer";
+import { inspect } from "util";
 import { codeBlock, EmbedBuilder } from "@discordjs/builders";
 import { ApplyOptions } from "@sapphire/decorators";
 import { Command } from "@sapphire/framework";
@@ -18,16 +20,16 @@ export class EvalCommand extends Command {
     public async messageRun(message: Message, args: Args): Promise<any> {
         const msg = message;
         const userArgument = await args.restResult("string");
-        const value = userArgument.unwrapOr(undefined);
+        const value = userArgument.unwrapOr(null);
         if (!value) return reply(message, { embeds: [new EmbedBuilder().setDescription("❌ | You need to input code")] });
         const code = value
-            .replaceAll("`", `\`${String.fromCharCode(8_203)}`)
-            .replaceAll("@", `@${String.fromCharCode(8_203)}`)
+            .replaceAll("`", `\`${String.fromCodePoint(8_203)}`)
+            .replaceAll("@", `@${String.fromCodePoint(8_203)}`)
             .replace(this.container.client.token!, "[Censored]");
         try {
             // eslint-disable-next-line no-eval
             let { evaled } = await EvalCommand.parseEval(eval(code));
-            if (typeof evaled !== "string") evaled = util.inspect(evaled, { depth: 0 });
+            if (typeof evaled !== "string") evaled = inspect(evaled, { depth: 0 });
             await reply(msg, {
                 content: codeBlock("js", evaled)
             });
@@ -36,9 +38,11 @@ export class EvalCommand extends Command {
                 content: codeBlock("js", (error as Error).message)
             });
         }
+
+        return null;
     }
 
-    public static parseType(input: any): string {
+    public static parseType(input: unknown): string {
         if (input instanceof Buffer) {
             let length = Math.round(input.length / 1_024 / 1_024);
             let ic = "MB";
@@ -52,16 +56,17 @@ export class EvalCommand extends Command {
             }
             return `Buffer (${length} ${ic})`;
         }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         return input === null || input === undefined ? "Void" : input.constructor.name;
     }
 
+    // eslint-disable-next-line typescript/explicit-module-boundary-types
     public static async parseEval(input: any): Promise<{ evaled: string; type: string; }> {
         const isPromise =
             input instanceof Promise &&
             typeof input.then === "function" &&
             typeof input.catch === "function";
         if (isPromise) {
+            // eslint-disable-next-line no-param-reassign
             input = await input;
             return {
                 evaled: input,

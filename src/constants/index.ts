@@ -1,4 +1,3 @@
-/* eslint-disable typescript/naming-convention */
 import process from "node:process";
 
 export const embedInfoColor = process.env.CONFIG_EMBED_INFO_COLOR;

@@ -1,16 +1,16 @@
-/* eslint-disable @typescript-eslint/no-base-to-string */
 import { ApplyOptions } from "@sapphire/decorators";
 import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
 import { Command, RegisterBehavior } from "@sapphire/framework";
 import type { GuildMember, Message, TextChannel, VoiceChannel } from "discord.js";
 import { ApplicationCommandOptionType, ChatInputCommandInteraction, escapeMarkdown } from "discord.js";
+import type { Track as ShoukakuTrack } from "shoukaku";
+import { LoadType } from "shoukaku";
 import { devGuilds, isDev } from "../../config.js";
 import { CommandContext } from "../../structures/CommandContext.js";
 import { ShoukakuHandler } from "../../structures/ShoukakuHandler.js";
+import { Track } from "../../structures/Track.js";
 import { EmbedPlayer } from "../../utils/EmbedPlayer.js";
 import { Util } from "../../utils/Util.js";
-import { LoadType, Track as ShoukakuTrack } from "shoukaku";
-import { Track } from "../../structures/Track.js";
 
 @ApplyOptions<Command.Options>({
     aliases: [],
@@ -70,7 +70,7 @@ export class PlayCommand extends Command {
                 ]
             });
         }
-        const query = argsQuery?.unwrapOr(undefined) ?? ctx.options?.getString("query", true);
+        const query = argsQuery?.unwrapOr(null) ?? ctx.options?.getString("query", true);
         const result = await ShoukakuHandler.restResolve(this.container.client.shoukaku.getIdealNode()!, query!, ShoukakuHandler.getProvider(query!));
         if ("error" in result) {
             return ctx.send({
@@ -126,14 +126,20 @@ export class PlayCommand extends Command {
                 break;
             }
 
-            default: {}
+            default: {
+                return ctx.send({
+                    embeds: [
+                        Util.createEmbed("error", "An unknown error occurred", true)
+                    ]
+                });
+            }
         }
-        
+
         const added = await dispatcher.addTracks(
             toAdd
         );
         if (!dispatcher.player?.track && added.success.length > 0) {
-            dispatcher.player?.playTrack({ track: { encoded: dispatcher.queue[0].base64 } });
+            await dispatcher.player?.playTrack({ track: { encoded: dispatcher.queue[0].base64 } });
         }
         await dispatcher.embedPlayer?.update();
         const sendTrackAdded = async (): Promise<void> => {
@@ -141,7 +147,7 @@ export class PlayCommand extends Command {
                 embeds: [
                     Util.createEmbed(
                         "success",
-                        `Added ${result.loadType === LoadType.PLAYLIST ? `**${result.data.info.name ?? "Unknown Playlist"}** (${added.success.length} tracks)` : `\`${escapeMarkdown(toAdd[0].track.info.title)}\``} to the queue`,
+                        `Added ${result.loadType === LoadType.PLAYLIST ? `**${result.data.info.name || "Unknown Playlist"}** (${added.success.length} tracks)` : `\`${escapeMarkdown(toAdd[0].track.info.title)}\``} to the queue`,
                         true
                     ).setThumbnail(result.loadType === LoadType.PLAYLIST ? " " : new Track(toAdd[0].track, ctx.author.id).displayThumbnail)
                 ]
@@ -167,5 +173,7 @@ export class PlayCommand extends Command {
                 ]
             });
         }
+
+        return null;
     }
 }

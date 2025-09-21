@@ -1,12 +1,15 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable promise/prefer-await-to-callbacks */
+/* eslint-disable promise/prefer-await-to-then */
+import { setTimeout } from "node:timers";
 import type { Guild, Snowflake, TextChannel, VoiceChannel, VoiceState } from "discord.js";
-import type { Player, TrackEndEvent, TrackExceptionEvent } from "shoukaku";
+import { TrackEndReason } from "lavalink-api-types/v4";
+import type { Player, TrackEndEvent, TrackExceptionEvent, Track as ShoukakuTrack } from "shoukaku";
 import type { DispatcherOptions } from "../typings/index.js";
 import { EmbedPlayer } from "../utils/EmbedPlayer.js";
 import { Util } from "../utils/Util.js";
 import { Track } from "./Track.js";
 import type { Venti } from "./Venti.js";
-import type { Track as ShoukakuTrack } from "shoukaku";
-import { TrackEndReason } from "lavalink-api-types/v4";
 
 const nonEnum = { enumerable: false };
 
@@ -72,7 +75,7 @@ export class Dispatcher {
             shardId: this.guild.shardId,
             channelId: this.voiceChannel.id,
             deaf: true
-        }).catch((error: Error) => ({ error: error.message }));
+        }).catch((error: unknown) => ({ error: (error as Error).message }));
         if ("error" in response) return { success: false, error: response.error };
         this.embedPlayer = new EmbedPlayer(this);
         await this.embedPlayer.fetch();
@@ -101,7 +104,7 @@ export class Dispatcher {
                 added.duplicate.push(track.encoded);
                 continue;
             }
-            if (settings.max_queue && !isNaN(settings.max_queue) && this.queue.length >= settings.max_queue) {
+            if (settings.max_queue && !Number.isNaN(settings.max_queue) && this.queue.length >= settings.max_queue) {
                 added.overload.push(track.encoded);
                 continue;
             }
@@ -112,7 +115,7 @@ export class Dispatcher {
     }
 
     public destroy(): void {
-        if (this.player) this.player.destroy();
+        if (this.player) void this.player.destroy();
         this.oldMusicMessage = null;
         this.oldVoiceStateUpdateMessage = null;
         Object.assign(this, { queue: [] });
@@ -135,13 +138,21 @@ export class Dispatcher {
             if (data.reason === TrackEndReason.Replaced) return;
             this.queue.previousTrack = this.queue[0];
             this.queue.shift();
-            if (["loadFailed", "cleanup"].includes(data.reason) && this.queue.length > 0) return player.playTrack({ track: { encoded: this.queue[0].base64 } });
+            if (["loadFailed", "cleanup"].includes(data.reason) && this.queue.length > 0) {
+                await player.playTrack({ track: { encoded: this.queue[0].base64 } });
+                return;
+            }
             if (this.loopState === LoopType.ALL) this.queue.push(this.queue.previousTrack);
             if (this.loopState === LoopType.ONE) this.queue.unshift(this.queue.previousTrack);
             void this.embedPlayer?.update();
-            if (this.queue.length > 0) return player.playTrack({ track: {
-                encoded: this.queue[0].base64
-            } });
+            if (this.queue.length > 0) {
+                await player.playTrack({
+                    track: {
+                        encoded: this.queue[0].base64
+                    }
+                });
+                return;
+            }
             if (!this.embedPlayer?.message) {
                 await this.textChannel.send({
                     embeds: [
@@ -155,11 +166,13 @@ export class Dispatcher {
         player.on("exception", async (data: TrackExceptionEvent) => {
             this.oldExceptionMessage = await this.textChannel.send({
                 embeds: [
-                    Util.createEmbed("error", `There is an exception while trying to play this track:\n\`\`\`java\n${data.exception!.message}\`\`\``, true)
+                    Util.createEmbed("error", `There is an exception while trying to play this track:\n\`\`\`java\n${data.exception.message}\`\`\``, true)
                 ]
             }).then(x => x.id);
             if (this.embedPlayer?.textChannel) {
-                setTimeout(() => this.oldExceptionMessage = null, 5_000);
+                setTimeout(() => {
+                    this.oldExceptionMessage = null;
+                }, 5_000);
             }
         });
     }
@@ -179,8 +192,8 @@ export class Dispatcher {
     public set oldMusicMessage(id: Snowflake | null) {
         if (this._lastMusicMessageID !== null) {
             this.textChannel.messages.fetch(this._lastMusicMessageID)
-                .then(m => m.delete())
-                .catch(error => this.client.logger.error(error));
+                .then(async m => m.delete())
+                .catch((error: unknown) => this.client.logger.error(error));
         }
         this._lastMusicMessageID = id;
     }
@@ -192,8 +205,8 @@ export class Dispatcher {
     public set oldVoiceStateUpdateMessage(id: Snowflake | null) {
         if (this._lastVoiceStateUpdateMessageID !== null) {
             this.textChannel.messages.fetch(this._lastVoiceStateUpdateMessageID)
-                .then(m => m.delete())
-                .catch(error => this.client.logger.error(error));
+                .then(async m => m.delete())
+                .catch((error: unknown) => this.client.logger.error(error));
         }
         this._lastVoiceStateUpdateMessageID = id;
     }
@@ -205,8 +218,8 @@ export class Dispatcher {
     public set oldExceptionMessage(id: Snowflake | null) {
         if (this._lastExceptionMessageID !== null) {
             this.textChannel.messages.fetch(this._lastExceptionMessageID)
-                .then(m => m.delete())
-                .catch(error => this.client.logger.error(error));
+                .then(async m => m.delete())
+                .catch((error: unknown) => this.client.logger.error(error));
         }
         this._lastExceptionMessageID = id;
     }

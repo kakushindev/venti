@@ -1,12 +1,12 @@
+import type { EmbedBuilder } from "@discordjs/builders";
 import type { Guild, Message, TextChannel } from "discord.js";
 import get from "got";
+import type { Venti } from "src/structures/Venti.js";
 import { prefix as defaultPrefix } from "../config.js";
 import { Images } from "../constants/index.js";
 import type { Dispatcher } from "../structures/Dispatcher.js";
 import { LoopType } from "../structures/Dispatcher.js";
 import { Util } from "./Util.js";
-import { Venti } from "src/structures/Venti.js";
-import { EmbedBuilder } from "@discordjs/builders";
 
 export class EmbedPlayer {
     public readonly client!: Venti;
@@ -14,8 +14,8 @@ export class EmbedPlayer {
     public message!: Message | undefined;
     public textChannel!: TextChannel | undefined;
     public constructor(public dispatcher: Dispatcher) {
-        Object.defineProperty(this, "client", { value: this.dispatcher.client });
-        Object.defineProperty(this, "guild", { value: this.dispatcher.guild });
+        Object.defineProperty(this, "client", { value: dispatcher.client });
+        Object.defineProperty(this, "guild", { value: dispatcher.guild });
     }
 
     public async fetch(force = false): Promise<EmbedPlayer | undefined> {
@@ -42,6 +42,7 @@ export class EmbedPlayer {
         if (!this.textChannel || !this.message) return;
         if (this.message.editable && this.dispatcher.player) {
             if (this.dispatcher.queue.length > 0) {
+                // eslint-disable-next-line no-param-reassign, no-useless-assignment
                 const list = Util.chunk(this.dispatcher.queue.queued.map((x, i) => `${++i}. ${x.info.author} - ${x.displayTitle} [${x.info.isStream ? "LIVE" : Util.readableTime(x.info.length)}] ~ <@${x.requester}>`), 10);
                 const currentSong = this.dispatcher.queue[0];
                 const image = currentSong.displayThumbnail
@@ -80,7 +81,7 @@ export class EmbedPlayer {
         guild: Guild, data: { channel: string | null | undefined; message: string | null | undefined; }
     ): Promise<{ channel: TextChannel | undefined; message: Message | undefined; }> {
         if (!data.channel || !data.message) return { channel: undefined, message: undefined };
-        const channel = await guild.channels.fetch(data.channel).catch(() => {});
+        const channel = await guild.channels.fetch(data.channel).catch(() => null);
         if (!channel?.isTextBased()) {
             await guild.client.prisma.guilds.update({
                 where: { id: guild.id },
@@ -88,7 +89,7 @@ export class EmbedPlayer {
             });
             return { channel: undefined, message: undefined };
         }
-        const message = await channel.messages.fetch(data.message).catch(() => {});
+        const message = await channel.messages.fetch(data.message).catch(() => null);
         if (!message) {
             await guild.client.prisma.guilds.update({
                 where: { id: guild.id },

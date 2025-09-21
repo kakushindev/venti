@@ -8,7 +8,7 @@ import { prefix } from "../../config.js";
     event: "messageCreate"
 })
 export class MessageCreateListener extends Listener {
-    public constructor(context: Listener.Context, options: Listener.Options) {
+    public constructor(context: Listener.LoaderContext, options: Listener.Options) {
         super(context, options);
     }
 
@@ -46,5 +46,7 @@ export class MessageCreateListener extends Listener {
                 }
             }
         }
+
+        return null;
     }
 }

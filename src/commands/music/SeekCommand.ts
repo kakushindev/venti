@@ -1,7 +1,8 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
 import { Command, RegisterBehavior } from "@sapphire/framework";
-import { ApplicationCommandOptionType, type ChatInputCommandInteraction, type Message } from "discord.js";
+import { ApplicationCommandOptionType } from "discord.js";
+import type { ChatInputCommandInteraction, Message } from "discord.js";
 import { devGuilds, isDev } from "../../config.js";
 import { CommandContext } from "../../structures/CommandContext.js";
 import { Util } from "../../utils/Util.js";
@@ -49,9 +50,9 @@ export class SeekCommand extends Command {
         if (dispatcher?.embedPlayer?.textChannel?.id === ctx.context.channelId) ctx.isInsideRequesterChannel = true;
 
         const durationArgs = ctx.isMessageCommand() ? await ctx.args?.pickResult("string") : undefined;
-        const duration = durationArgs?.unwrapOr(undefined) ?? ctx.options?.getString("duration", true);
+        const duration = durationArgs?.unwrapOr(null) ?? ctx.options?.getString("duration", true);
         // eslint-disable-next-line prefer-named-capture-group
-        const durationPattern = /^[0-5]?\d(:[0-5]\d){1,2}$/;
+        const durationPattern = /^[0-5]?\d(:[0-5]\d){1,2}$/u;
 
         if (!duration || !durationPattern.test(duration)) {
             return ctx.send({
@@ -79,7 +80,7 @@ export class SeekCommand extends Command {
             });
         }
 
-        dispatcher?.player?.seekTo(parsedDuration);
+        await dispatcher?.player?.seekTo(parsedDuration);
 
         return ctx.send({
             embeds: [

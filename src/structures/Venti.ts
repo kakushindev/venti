@@ -1,3 +1,4 @@
+/* eslint-disable typescript/consistent-type-definitions */
 import Prisma from "@prisma/client";
 import { SapphireClient } from "@sapphire/framework";
 import type { ClientOptions } from "discord.js";
@@ -10,7 +11,7 @@ const { PrismaClient } = Prisma;
 
 export class Venti extends SapphireClient {
     public readonly shoukaku = new ShoukakuHandler(this);
-    public readonly util = new Util(this);
+    public readonly util = new Util();
     public readonly constants = constants;
     public readonly prisma = new PrismaClient();
     public readonly databases = {
@@ -23,16 +24,6 @@ export class Venti extends SapphireClient {
 }
 
 declare module "@sapphire/framework" {
-    interface SapphireClient {
-        shoukaku: ShoukakuHandler;
-        util: Util;
-        constants: typeof constants;
-        prisma: Prisma.PrismaClient;
-        databases: {
-            guild: GuildSetting;
-        };
-    }
-
     interface Preconditions {
         ownerOnly: never;
         memberInVoice: never;
@@ -42,9 +33,7 @@ declare module "@sapphire/framework" {
         isInsideRequester: never;
         isPlayerPlaying: never;
     }
-};
-
-
+}
 
 declare module "discord.js" {
     interface Client {

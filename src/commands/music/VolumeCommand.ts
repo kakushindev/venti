@@ -1,7 +1,8 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
 import { Command, RegisterBehavior } from "@sapphire/framework";
-import { ApplicationCommandOptionType, type ChatInputCommandInteraction, type Message } from "discord.js";
+import { ApplicationCommandOptionType } from "discord.js";
+import type { ChatInputCommandInteraction, Message } from "discord.js";
 import { devGuilds, isDev } from "../../config.js";
 import { CommandContext } from "../../structures/CommandContext.js";
 import { Util } from "../../utils/Util.js";
@@ -53,15 +54,15 @@ export class VolumeCommand extends Command {
                 ]
             });
         }
-        const volume = argsVolume?.unwrapOr(undefined) ?? ctx.options?.getInteger("volume", true);
-        if (!volume || isNaN(volume) || volume < 1 || volume > 100) {
+        const volume = argsVolume?.unwrapOr(null) ?? ctx.options?.getInteger("volume", true);
+        if (!volume || Number.isNaN(volume) || volume < 1 || volume > 100) {
             return ctx.send({
                 embeds: [
                     Util.createEmbed("error", "Please provide a valid number between 1 - 100", true)
                 ]
             });
         }
-        dispatcher?.player?.setGlobalVolume(volume / 100);
+        await dispatcher?.player?.setGlobalVolume(volume / 100);
         await ctx.send({
             embeds: [
                 Util.createEmbed("success", `🔊 **|** Changed current volume to ${volume}%`)

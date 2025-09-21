@@ -1,21 +1,20 @@
-/* eslint-disable typescript/no-non-null-assertion */
-import { Colors, type ColorResolvable, type Embed, type PermissionsString } from "discord.js";
+import { URL } from "url";
+import { EmbedBuilder } from "@discordjs/builders";
+import { Colors } from "discord.js";
+import type { ColorResolvable } from "discord.js";
 import prettyMilliseconds from "pretty-ms";
 import { embedInfoColor, Emojis } from "../constants/index.js";
-import type { Venti } from "../structures/Venti.js";
-import { EmbedBuilder } from "@discordjs/builders";
 
 type hexColorsType = "error" | "info" | "success" | "warn";
 const hexColors: Record<hexColorsType, ColorResolvable> = {
     error: Colors.Red,
-    info: parseInt(embedInfoColor.replace("#", ""), 16),
+    info: Number.parseInt(embedInfoColor.replace("#", ""), 16),
     success: Colors.Green,
     warn: Colors.Yellow
 };
 
+// eslint-disable-next-line typescript/no-extraneous-class
 export class Util {
-    public constructor(public readonly client: Venti) {}
-
     public static durationToMS(dur: string): number {
         return dur.split(":").map(Number).reduce((acc, curr) => curr + (acc * 60)) * 1_000;
     }
@@ -62,13 +61,17 @@ export class Util {
         return output;
     }
 
+    // eslint-disable-next-line no-unused-vars
     public static chunk<T>(arr: T[], len: number): T[][];
+    // eslint-disable-next-line no-unused-vars
     public static chunk(arr: string, len: number): string[];
     public static chunk(...args: any[]): any[] {
+        // eslint-disable-next-line typescript/no-unsafe-assignment
         const [arr, len] = args as [any, number];
         const rest: (typeof arr)[] = [];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        // eslint-disable-next-line typescript/no-unsafe-member-access, typescript/no-unsafe-call
         for (let i = 0; i < arr.length; i += len) { rest.push(arr.slice(i, i + len)); }
+        // eslint-disable-next-line typescript/no-unsafe-return
         return rest;
     }
 

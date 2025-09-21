@@ -1,4 +1,4 @@
-FROM ghcr.io/hazmi35/node:18-dev-alpine as build-stage
+FROM ghcr.io/hazmi35/node:22-dev-alpine AS build-stage
 
 # Prepare pnpm with corepack (experimental feature)
 RUN corepack enable && corepack prepare pnpm@latest
@@ -22,10 +22,10 @@ RUN pnpm run build
 RUN pnpm prune --production
 
 # Get ready for production
-FROM ghcr.io/hazmi35/node:18-alpine
+FROM ghcr.io/hazmi35/node:22-alpine
 
-LABEL name "venti"
-LABEL maintainer "Kakushin Devs <hello@kakushin.dev>"
+LABEL name="venti"
+LABEL maintainer="Kakushin Devs <hello@kakushin.dev>"
 
 # Copy needed files
 COPY --from=build-stage /tmp/build/package.json .

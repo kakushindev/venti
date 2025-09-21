@@ -1,10 +1,10 @@
+import { EmbedBuilder } from "@discordjs/builders";
 import { ApplyOptions } from "@sapphire/decorators";
 import type { ApplicationCommandRegistry } from "@sapphire/framework";
 import { Command, RegisterBehavior } from "@sapphire/framework";
 import type { ColorResolvable, ChatInputCommandInteraction, Message } from "discord.js";
 import { devGuilds, isDev } from "../../config.js";
 import { CommandContext } from "../../structures/CommandContext.js";
-import { EmbedBuilder } from "@discordjs/builders";
 
 @ApplyOptions<Command.Options>({
     aliases: [],
@@ -33,36 +33,43 @@ export class PingCommand extends Command {
         return this.run(new CommandContext(interaction));
     }
 
-    public run(ctx: CommandContext): any {
-        ctx.send({ content: "🏓 Pong!" }, true).then(msg => {
+    public async run(ctx: CommandContext): Promise<any> {
+        try {
+            const msg = await ctx.send({ content: "🏓 Pong!" }, true);
             const wsLatency = this.container.client.ws.ping.toFixed(0);
             if (msg) {
                 const latency = msg.createdTimestamp - ctx.context.createdTimestamp;
-                msg.edit({
-                    content: " ",
-                    embeds: [
-                        new EmbedBuilder()
-                            .setAuthor({ name: "🏓 PONG!", iconURL: this.container.client.user!.displayAvatarURL() })
-                            .setColor(PingCommand.searchHex(wsLatency) as number)
-                            .addFields({
-                                name: "📶 API Latency",
-                                value: `**\`${latency}\`** ms`,
-                                inline: true
-                            }, {
-                                name: "🌐 WebSocket Latency",
-                                value: `**\`${wsLatency}\`** ms`,
-                                inline: true
-                            })
-                            .setFooter({ text: `Requested by: ${ctx.author.tag}`, iconURL: ctx.author.displayAvatarURL() })
-                            .setTimestamp()
-                    ]
-                }).catch(error => this.container.logger.error(error));
+                try {
+                    await msg.edit({
+                        content: " ",
+                        embeds: [
+                            new EmbedBuilder()
+                                .setAuthor({ name: "🏓 PONG!", iconURL: this.container.client.user!.displayAvatarURL() })
+                                .setColor(PingCommand.searchHex(wsLatency) as number)
+                                .addFields({
+                                    name: "📶 API Latency",
+                                    value: `**\`${latency}\`** ms`,
+                                    inline: true
+                                }, {
+                                    name: "🌐 WebSocket Latency",
+                                    value: `**\`${wsLatency}\`** ms`,
+                                    inline: true
+                                })
+                                .setFooter({ text: `Requested by: ${ctx.author.tag}`, iconURL: ctx.author.displayAvatarURL() })
+                                .setTimestamp()
+                        ]
+                    });
+                } catch (error) {
+                    this.container.logger.error(error);
+                }
             }
-        }).catch(error => this.container.logger.error(error));
+        } catch (error) {
+            this.container.logger.error(error);
+        }
     }
 
     private static searchHex(ms: number | string): ColorResolvable {
-        const msNumber = typeof ms === 'string' ? parseInt(ms, 10) : ms;
+        const msNumber = typeof ms === "string" ? Number.parseInt(ms, 10) : ms;
         const listColorHex = [
             [0, 20, 0x0DFF00],
             [21, 50, 0x0BC700],

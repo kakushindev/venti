@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable typescript/no-unsafe-enum-comparison */
+
 import type { Events, UserError, ChatInputCommandDeniedPayload } from "@sapphire/framework";
 import { Listener, Identifiers } from "@sapphire/framework";
 import type { ChatInputCommandInteraction, MessageCreateOptions, PermissionsString } from "discord.js";
@@ -25,7 +26,7 @@ export class ChatInputCommandDeniedListener extends Listener<typeof Events.ChatI
                 Util.createEmbed("error", `${identifier === Identifiers.PreconditionClientPermissions ? "I am" : "You are"} missing the following permissions to run this command:\n\`\`\`diff\n${missingPerms.map(x => `- ${x}`).join("\n")}\`\`\``, true)
             ];
         }
-        return new CommandContext(interaction as ChatInputCommandInteraction<"cached">).send({
+        void new CommandContext(interaction as ChatInputCommandInteraction<"cached">).send({
             ...payload,
             allowedMentions: { users: [interaction.user.id], roles: [] },
             ephemeral: true

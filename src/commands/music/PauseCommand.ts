@@ -48,10 +48,10 @@ export class PauseCommand extends Command {
             }
             return;
         }
-        dispatcher?.player?.setPaused(true);
+        await dispatcher?.player?.setPaused(true);
         await dispatcher?.embedPlayer?.update();
         if (!ctx.isInsideRequesterChannel) {
-            return ctx.send({
+            await ctx.send({
                 embeds: [
                     Util.createEmbed("success", "▶ **|** Paused current playback")
                 ]

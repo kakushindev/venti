@@ -7,7 +7,7 @@ import { Listener } from "@sapphire/framework";
     name: "shoukaku:error"
 })
 export class ShoukakuErrorListener extends Listener {
-    public constructor(context: Listener.Context, options: Listener.Options) {
+    public constructor(context: Listener.LoaderContext, options: Listener.Options) {
         super(context, options);
     }
 

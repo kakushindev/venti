@@ -1,7 +1,8 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import type { PreconditionOptions, PreconditionResult } from "@sapphire/framework";
 import { Precondition } from "@sapphire/framework";
-import { ChannelType, GuildMember, type ChatInputCommandInteraction, type Message } from "discord.js";
+import { ChannelType } from "discord.js";
+import type { GuildMember, ChatInputCommandInteraction, Message } from "discord.js";
 import { CommandContext } from "../structures/CommandContext.js";
 
 @ApplyOptions<PreconditionOptions>({

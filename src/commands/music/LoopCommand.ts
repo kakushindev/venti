@@ -1,7 +1,9 @@
+import { setTimeout } from "node:timers";
 import { ApplyOptions } from "@sapphire/decorators";
 import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
 import { Command, RegisterBehavior } from "@sapphire/framework";
-import { ApplicationCommandOptionType, type ApplicationCommandOptionData, type ChatInputCommandInteraction, type GuildCacheMessage, type Message } from "discord.js";
+import { ApplicationCommandOptionType } from "discord.js";
+import type { ApplicationCommandOptionData, ChatInputCommandInteraction, GuildCacheMessage } from "discord.js";
 import { devGuilds, isDev } from "../../config.js";
 import { CommandContext } from "../../structures/CommandContext.js";
 import { LoopType } from "../../structures/Dispatcher.js";
@@ -51,9 +53,9 @@ export class LoopCommand extends Command {
 
     public async messageRun(message: GuildCacheMessage<"cached">, args: Args): Promise<any> {
         const cmd = await args.pickResult("string");
-        const value = cmd.unwrapOr(undefined);
+        const value = cmd.unwrapOr(null);
         const validCommands = this.commands.map(x => x.name);
-        const dispatcher = this.container.client.shoukaku.queue.get(message.guildId!);
+        const dispatcher = this.container.client.shoukaku.queue.get(message.guildId);
         if (!value || !validCommands.includes(value.toLowerCase())) {
             const msg = await message.channel.send({
                 embeds: [
@@ -61,8 +63,8 @@ export class LoopCommand extends Command {
                 ]
             });
             if (dispatcher?.embedPlayer?.textChannel?.id === message.channelId) {
-                setTimeout(() => {
-                    if (msg.deletable) return msg.delete();
+                setTimeout(async () => {
+                    if (msg.deletable) await msg.delete();
                 }, 5_000);
             }
             return undefined;
@@ -97,6 +99,14 @@ export class LoopCommand extends Command {
                 await ctx.send({
                     embeds: [
                         Util.createEmbed("success", "Disabled loop mode", true)
+                    ]
+                });
+                break;
+            }
+            default: {
+                await ctx.send({
+                    embeds: [
+                        Util.createEmbed("error", "An unknown error occurred", true)
                     ]
                 });
                 break;

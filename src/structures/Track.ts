@@ -1,8 +1,9 @@
+/* eslint-disable no-unused-vars */
 import { Buffer } from "node:buffer";
 import { decode } from "@lavalink/encoding";
 import { escapeMarkdown } from "discord.js";
-import DataInput from "../utils/DataInput.js";
 import type { Track as ShoukakuTrack } from "shoukaku";
+import DataInput from "../utils/DataInput.js";
 
 export class DecodeTrack {
     public title: string;
@@ -17,8 +18,7 @@ export class DecodeTrack {
 
     public constructor(buffer: Uint8Array) {
         const input = new DataInput(buffer);
-        // eslint-disable-next-line typescript/no-unused-expressions
-        input.readInt() >> 30;
+        void (input.readInt() >> 30);
         input.readByte();
 
         this.title = input.readUTF();

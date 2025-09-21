@@ -1,3 +1,4 @@
+import { URL } from "node:url";
 import { cast } from "@sapphire/utilities";
 import { Collection } from "discord.js";
 import got from "got";
@@ -43,7 +44,7 @@ export class ShoukakuHandler extends Shoukaku {
                     // @ts-expect-error Rest#auth is private
                     Authorization: lavalinkRest.auth ?? node.rest.auth
                 }
-            }).json<LavalinkResponse>().catch((error: Error) => ({ error: error.message }));
+            }).json<LavalinkResponse>().catch((error: unknown) => ({ error: (error as Error).message }));
             if ("error" in response) result = response;
             return response;
         } catch (error) {

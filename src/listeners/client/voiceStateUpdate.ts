@@ -1,3 +1,8 @@
+/* eslint-disable unicorn/expiring-todo-comments */
+/* eslint-disable promise/prefer-await-to-callbacks */
+/* eslint-disable promise/prefer-await-to-then */
+/* eslint-disable require-atomic-updates */
+import { setTimeout, clearTimeout } from "node:timers";
 import { ApplyOptions } from "@sapphire/decorators";
 import { Listener } from "@sapphire/framework";
 import { cast } from "@sapphire/utilities";
@@ -29,7 +34,7 @@ export class VoiceStateUpdateEvent extends Listener {
         // Handle when bot gets kicked from the voice channel
         if (queueVCId && oldMember?.id === botID && oldID === queueVCId && newID === undefined) {
             try {
-                dispatcher.player?.setPaused(true);
+                await dispatcher.player?.setPaused(true);
                 clearTimeout(dispatcher.timeout!);
                 this.container.client.logger.info(`Disconnected from the voice channel at ${newState.guild.name}, the queue was deleted.`);
                 const msg = await dispatcher.textChannel.send({
@@ -40,7 +45,7 @@ export class VoiceStateUpdateEvent extends Listener {
                     .then(m => {
                         dispatcher.oldMusicMessage = null; dispatcher.oldVoiceStateUpdateMessage = null; return m;
                     })
-                    .catch(error => {
+                    .catch((error: unknown) => {
                         this.container.client.logger.error(error);
                     });
                 if (dispatcher.embedPlayer?.textChannel) {
@@ -59,8 +64,8 @@ export class VoiceStateUpdateEvent extends Listener {
         // Handle when the bot is moved to another voice channel
         if (queueVCId && member?.id === botID && oldID === queueVCId && newID !== queueVCId && newID !== undefined) {
             if (!newVCMembers) return undefined;
-            if (newVCMembers.size === 0 && dispatcher.timeout === null) this.doTimeout(newVCMembers, dispatcher);
-            else if (newVCMembers.size > 0 && dispatcher.timeout !== null) this.resumeTimeout(newVCMembers, dispatcher);
+            if (newVCMembers.size === 0 && dispatcher.timeout === null) await this.doTimeout(newVCMembers, dispatcher);
+            else if (newVCMembers.size > 0 && dispatcher.timeout !== null) await this.resumeTimeout(newVCMembers, dispatcher);
         }
 
         // Handle when user leaves voice channel
@@ -72,7 +77,7 @@ export class VoiceStateUpdateEvent extends Listener {
             !member?.user.bot &&
             dispatcher.timeout === null &&
             deleteQueueTimeout !== 0
-        ) this.doTimeout(queueVCMembers, dispatcher);
+        ) await this.doTimeout(queueVCMembers, dispatcher);
 
         // Handle when user joins voice channel or bot gets moved
         if (
@@ -80,16 +85,18 @@ export class VoiceStateUpdateEvent extends Listener {
             !member?.user.bot &&
             deleteQueueTimeout !== 0 &&
             queueVCMembers
-        ) this.resumeTimeout(queueVCMembers, dispatcher);
+        ) await this.resumeTimeout(queueVCMembers, dispatcher);
+
+        return null;
     }
 
-    private doTimeout(vcMembers: Collection<Snowflake, GuildMember>, dispatcher: Dispatcher): any {
+    private async doTimeout(vcMembers: Collection<Snowflake, GuildMember>, dispatcher: Dispatcher): Promise<any> {
         try {
             if (vcMembers.size > 0) return undefined;
             clearTimeout(dispatcher.timeout!);
             dispatcher.timeout = null;
             void dispatcher.embedPlayer?.update();
-            dispatcher.player?.setPaused(true);
+            await dispatcher.player?.setPaused(true);
             const duration = Util.formatMS(deleteQueueTimeout);
             dispatcher.oldVoiceStateUpdateMessage = null;
             dispatcher.timeout = setTimeout(async () => {
@@ -99,7 +106,7 @@ export class VoiceStateUpdateEvent extends Listener {
                         Util.createEmbed("error", `**${duration}** have passed and there is no one who joins my voice channel, the queue was deleted.`)
                             .setTitle("⏹ Queue deleted.")
                     ]
-                }).catch(error => this.container.client.logger.error(error));
+                }).catch((error: unknown) => this.container.client.logger.error(error));
                 dispatcher.destroy();
                 if (dispatcher.embedPlayer?.textChannel) {
                     setTimeout(async () => {
@@ -115,11 +122,15 @@ If there's no one who joins my voice channel in the next **${duration}**, the qu
                     `)
                         .setTitle("⏸ Queue paused.")
                 ]
-            }).then(m => dispatcher.oldVoiceStateUpdateMessage = m.id).catch(error => this.container.client.logger.error(error));
+            }).then(m => {
+                dispatcher.oldVoiceStateUpdateMessage = m.id; return m;
+            }).catch((error: unknown) => this.container.client.logger.error(error));
         } catch (error) { this.container.client.logger.error(error); }
+
+        return null;
     }
 
-    private resumeTimeout(vcMembers: Collection<Snowflake, GuildMember>, dispatcher: Dispatcher): any {
+    private async resumeTimeout(vcMembers: Collection<Snowflake, GuildMember>, dispatcher: Dispatcher): Promise<any> {
         if (vcMembers.size > 0) {
             if (!dispatcher.player?.paused) return undefined;
             try {
@@ -127,8 +138,10 @@ If there's no one who joins my voice channel in the next **${duration}**, the qu
                 dispatcher.timeout = null;
                 dispatcher.oldVoiceStateUpdateMessage = null;
                 void dispatcher.embedPlayer?.update();
-                dispatcher.player.setPaused(false);
+                await dispatcher.player.setPaused(false);
             } catch (error) { this.container.client.logger.error(error); }
         }
+
+        return null;
     }
 }

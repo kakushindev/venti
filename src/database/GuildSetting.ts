@@ -3,6 +3,7 @@ import type { Snowflake } from "discord-api-types/globals";
 import type { Venti } from "../structures/Venti.js";
 
 export class GuildSetting {
+    // eslint-disable-next-line no-unused-vars
     public constructor(public readonly client: Venti) {}
 
     public async fetchGuildRequester(id: Snowflake): Promise<{ channel: string | null | undefined; message: string | null | undefined; }> {
@@ -27,14 +28,12 @@ export class GuildSetting {
                 id
             },
             ...options
-        }).catch(error => this.client.logger.error(error));
-        if (!data) {
-            data = await this.client.prisma.guilds.create({
-                data: {
-                    id
-                }
-            });
-        }
+        }).catch((error: unknown) => this.client.logger.error(error));
+        data ??= await this.client.prisma.guilds.create({
+            data: {
+                id
+            }
+        });
         return data;
     }
 }

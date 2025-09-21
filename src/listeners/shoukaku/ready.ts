@@ -7,7 +7,7 @@ import { Listener } from "@sapphire/framework";
     name: "shoukaku:ready"
 })
 export class ShoukakuReadyListener extends Listener {
-    public constructor(context: Listener.Context, options: Listener.Options) {
+    public constructor(context: Listener.LoaderContext, options: Listener.Options) {
         super(context, options);
     }
 

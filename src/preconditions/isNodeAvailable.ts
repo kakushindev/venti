@@ -15,7 +15,6 @@ export class isNodeAvailable extends Precondition {
     }
 
     private precondition(): PreconditionResult {
-        // eslint-disable-next-line typescript/no-unsafe-enum-comparison
         return this.container.client.shoukaku.getIdealNode() ? this.ok() : this.error({ message: "There's no node available" });
     }
 }

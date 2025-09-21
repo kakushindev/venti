@@ -1,15 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-/* eslint-disable @typescript-eslint/consistent-type-assertions */
+/* eslint-disable typescript/no-unnecessary-condition */
+/* eslint-disable stylistic/max-len */
+/* eslint-disable typescript/no-shadow */
+/* eslint-disable no-shadow */
+/* eslint-disable no-unused-vars */
+import { setTimeout } from "node:timers";
 import type { Args } from "@sapphire/framework";
-import { MessageOptions, send } from "@sapphire/plugin-editable-commands";
-import { InteractionReplyOptions, MessagePayload, GuildChannel, ButtonInteraction, SelectMenuInteraction, InteractionType, User, InteractionEditReplyOptions } from "discord.js";
-import { ChatInputCommandInteraction, Message, Interaction, BaseInteraction, ComponentType } from "discord.js";
+import type { MessageOptions } from "@sapphire/plugin-editable-commands";
+import { send } from "@sapphire/plugin-editable-commands";
+import type { InteractionReplyOptions, MessagePayload, GuildChannel, ButtonInteraction, StringSelectMenuInteraction, User, InteractionEditReplyOptions, Interaction } from "discord.js";
+import { InteractionType, ChatInputCommandInteraction, Message, BaseInteraction, ComponentType } from "discord.js";
 
 export type MessageInteractionAction = "editReply" | "followUp" | "reply";
 
 export class CommandContext {
-    public author!: User
-    public channel!: Message["channel"] | ChatInputCommandInteraction<"cached">["channel"];
+    public author!: User;
+    public channel!: ChatInputCommandInteraction<"cached">["channel"] | Message["channel"];
     public options?: ChatInputCommandInteraction<"cached">["options"];
     public isInsideRequesterChannel = false;
     public constructor(public readonly context: BaseInteraction | Message, public args?: Args) {
@@ -79,7 +84,7 @@ export class CommandContext {
     public isSelectMenu(): boolean {
         return (
             this.context.type === InteractionType.MessageComponent &&
-            (this.context as unknown as SelectMenuInteraction).componentType === ComponentType.StringSelect
+            (this.context as unknown as StringSelectMenuInteraction).componentType === ComponentType.StringSelect
         );
     }
 }
