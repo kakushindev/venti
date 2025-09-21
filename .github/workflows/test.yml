@@ -15,6 +15,6 @@ on:
 
 jobs:
   docker:
-    uses: kakushindev/workflows/.github/workflows/lint-and-compile-test.yml@main
+    uses: ict-neskar/workflows/.github/workflows/code-consistency-check.yaml@main
     secrets: inherit
     
