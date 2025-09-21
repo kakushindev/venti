@@ -1,10 +1,10 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { ApplicationCommandRegistry, Args, Command, RegisterBehavior } from "@sapphire/framework";
-import { CommandInteraction, Message } from "discord.js";
-import { ApplicationCommandOptionTypes } from "discord.js/typings/enums";
-import { devGuilds, isDev } from "../../config";
-import { CommandContext } from "../../structures/CommandContext";
-import { Util } from "../../utils/Util";
+import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
+import { Command, RegisterBehavior } from "@sapphire/framework";
+import { ApplicationCommandOptionType, type ChatInputCommandInteraction, type Message } from "discord.js";
+import { devGuilds, isDev } from "../../config.js";
+import { CommandContext } from "../../structures/CommandContext.js";
+import { Util } from "../../utils/Util.js";
 
 @ApplyOptions<Command.Options>({
     aliases: [],
@@ -14,7 +14,7 @@ import { Util } from "../../utils/Util";
         usage: "{prefix}seek [mm:ss]"
     },
     preconditions: ["isPlayerPlaying", "memberInVoice", "memberVoiceJoinable", "memberInSameVoice"],
-    requiredClientPermissions: ["EMBED_LINKS"]
+    requiredClientPermissions: ["EmbedLinks"]
 })
 export class SeekCommand extends Command {
     public override registerApplicationCommands(registry: ApplicationCommandRegistry): void {
@@ -25,7 +25,7 @@ export class SeekCommand extends Command {
                 {
                     name: "time",
                     description: "Time used for seeking",
-                    type: ApplicationCommandOptionTypes.STRING,
+                    type: ApplicationCommandOptionType.String,
                     required: true
                 }
             ]
@@ -36,11 +36,11 @@ export class SeekCommand extends Command {
         });
     }
 
-    public async chatInputRun(interaction: CommandInteraction<"cached">): Promise<any> {
+    public async chatInputRun(interaction: ChatInputCommandInteraction<"cached">): Promise<any> {
         return this.run(new CommandContext(interaction));
     }
 
-    public messageRun(message: Message, args: Args): Promise<any> {
+    public async messageRun(message: Message, args: Args): Promise<any> {
         return this.run(new CommandContext(message, args));
     }
 
@@ -51,9 +51,9 @@ export class SeekCommand extends Command {
         const durationArgs = ctx.isMessageCommand() ? await ctx.args?.pickResult("string") : undefined;
         const duration = durationArgs?.unwrapOr(undefined) ?? ctx.options?.getString("duration", true);
         // eslint-disable-next-line prefer-named-capture-group
-        const durationPattern = /^[0-5]?[0-9](:[0-5][0-9]){1,2}$/;
+        const durationPattern = /^[0-5]?\d(:[0-5]\d){1,2}$/;
 
-        if (!duration || !durationPattern.exec(duration)) {
+        if (!duration || !durationPattern.test(duration)) {
             return ctx.send({
                 embeds: [
                     Util.createEmbed("error", "Invalid time format provided, example: `2:11`", true)

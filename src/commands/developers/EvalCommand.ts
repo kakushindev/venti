@@ -1,9 +1,10 @@
-import { CommandOptions, Command, Args } from "@sapphire/framework";
+import util from "node:util";
+import { codeBlock, EmbedBuilder } from "@discordjs/builders";
 import { ApplyOptions } from "@sapphire/decorators";
-import { Message, MessageEmbed } from "discord.js";
-import util from "util";
-import { codeBlock } from "@discordjs/builders";
+import { Command } from "@sapphire/framework";
+import type { CommandOptions, Args } from "@sapphire/framework";
 import { reply } from "@sapphire/plugin-editable-commands";
+import type { Message } from "discord.js";
 
 @ApplyOptions<CommandOptions>({
     aliases: [],
@@ -11,17 +12,17 @@ import { reply } from "@sapphire/plugin-editable-commands";
     quotes: [],
     description: "owo whats this",
     preconditions: ["ownerOnly"],
-    requiredClientPermissions: ["SEND_MESSAGES", "EMBED_LINKS"]
+    requiredClientPermissions: ["SendMessages", "EmbedLinks"]
 })
 export class EvalCommand extends Command {
     public async messageRun(message: Message, args: Args): Promise<any> {
         const msg = message;
         const userArgument = await args.restResult("string");
         const value = userArgument.unwrapOr(undefined);
-        if (!value) return reply(message, { embeds: [new MessageEmbed().setDescription("❌ | You need to input code")] });
+        if (!value) return reply(message, { embeds: [new EmbedBuilder().setDescription("❌ | You need to input code")] });
         const code = value
-            .replace(/`/g, `\`${String.fromCharCode(8203)}`)
-            .replace(/@/g, `@${String.fromCharCode(8203)}`)
+            .replaceAll("`", `\`${String.fromCharCode(8_203)}`)
+            .replaceAll("@", `@${String.fromCharCode(8_203)}`)
             .replace(this.container.client.token!, "[Censored]");
         try {
             // eslint-disable-next-line no-eval
@@ -30,19 +31,19 @@ export class EvalCommand extends Command {
             await reply(msg, {
                 content: codeBlock("js", evaled)
             });
-        } catch (e: any) {
+        } catch (error: any) {
             await reply(msg, {
-                content: codeBlock("js", (e as Error).message)
+                content: codeBlock("js", (error as Error).message)
             });
         }
     }
 
     public static parseType(input: any): string {
         if (input instanceof Buffer) {
-            let length = Math.round(input.length / 1024 / 1024);
+            let length = Math.round(input.length / 1_024 / 1_024);
             let ic = "MB";
             if (!length) {
-                length = Math.round(input.length / 1024);
+                length = Math.round(input.length / 1_024);
                 ic = "KB";
             }
             if (!length) {
@@ -55,7 +56,7 @@ export class EvalCommand extends Command {
         return input === null || input === undefined ? "Void" : input.constructor.name;
     }
 
-    public static async parseEval(input: any): Promise<{ evaled: string; type: string }> {
+    public static async parseEval(input: any): Promise<{ evaled: string; type: string; }> {
         const isPromise =
             input instanceof Promise &&
             typeof input.then === "function" &&

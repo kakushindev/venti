@@ -1,14 +1,16 @@
+/* eslint-disable typescript/no-non-null-assertion */
 import { ApplyOptions } from "@sapphire/decorators";
-import { Precondition, PreconditionOptions, PreconditionResult } from "@sapphire/framework";
-import { CommandInteraction, Message } from "discord.js";
-import { CommandContext } from "../structures/CommandContext";
-import { EmbedPlayer } from "../utils/EmbedPlayer";
+import type { PreconditionOptions, PreconditionResult } from "@sapphire/framework";
+import { Precondition } from "@sapphire/framework";
+import type { ChatInputCommandInteraction, Message } from "discord.js";
+import { CommandContext } from "../structures/CommandContext.js";
+import { EmbedPlayer } from "../utils/EmbedPlayer.js";
 
 @ApplyOptions<PreconditionOptions>({
     name: "isInsideRequester"
 })
 export class isInsideRequester extends Precondition {
-    public chatInputRun(interaction: CommandInteraction<"cached">): PreconditionResult {
+    public chatInputRun(interaction: ChatInputCommandInteraction<"cached">): PreconditionResult {
         return this.precondition(new CommandContext(interaction));
     }
 
@@ -23,7 +25,7 @@ export class isInsideRequester extends Precondition {
             return this.error({ message: "You can't use that command here" });
         }
         const data = await this.container.client.databases.guild.fetchGuildRequester(ctx.context.guildId!);
-        if (data.channel && data.message) {
+        if (data.channel !== null && data.message !== null) {
             requester = await EmbedPlayer.resolveRequesterChannel(ctx.context.guild!, data);
             if (requester.channel?.id === ctx.context.channelId) {
                 return this.error({ message: "You can't use that command here" });

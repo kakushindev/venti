@@ -1,10 +1,10 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Listener } from "@sapphire/framework";
 import { cast } from "@sapphire/utilities";
-import { Collection, GuildMember, Message, Snowflake, VoiceChannel, VoiceState } from "discord.js";
-import { deleteQueueTimeout } from "../../config";
-import { Dispatcher } from "../../structures/Dispatcher";
-import { Util } from "../../utils/Util";
+import type { Collection, GuildMember, Message, Snowflake, VoiceChannel, VoiceState } from "discord.js";
+import { deleteQueueTimeout } from "../../config.js";
+import type { Dispatcher } from "../../structures/Dispatcher.js";
+import { Util } from "../../utils/Util.js";
 
 @ApplyOptions<Listener.Options>({
     event: "voiceStateUpdate"
@@ -18,8 +18,8 @@ export class VoiceStateUpdateEvent extends Listener {
         const oldVC = oldState.channel;
         const oldID = oldVC?.id;
         const newID = newVC?.id;
-        const queueVCId = dispatcher.player?.connection.channelId;
-        const queueVC = cast<VoiceChannel | undefined>(newState.guild.channels.cache.get(cast<string>(dispatcher.player?.connection.channelId)));
+        const queueVCId = dispatcher.voiceChannel.id;
+        const queueVC = cast<VoiceChannel | undefined>(newState.guild.channels.cache.get(cast<string>(dispatcher.voiceChannel.id)));
         const oldMember = oldState.member;
         const member = newState.member;
         const queueVCMembers = queueVC?.members.filter(m => !m.user.bot);
@@ -37,19 +37,20 @@ export class VoiceStateUpdateEvent extends Listener {
                         Util.createEmbed("warn", "I was disconnected from the voice channel, the queue will be deleted")
                     ]
                 })
-                    .then(m => { dispatcher.oldMusicMessage = null; dispatcher.oldVoiceStateUpdateMessage = null; return m; })
-                    .catch(e => {
-                        this.container.client.logger.error(e);
-                        return undefined;
+                    .then(m => {
+                        dispatcher.oldMusicMessage = null; dispatcher.oldVoiceStateUpdateMessage = null; return m;
+                    })
+                    .catch(error => {
+                        this.container.client.logger.error(error);
                     });
                 if (dispatcher.embedPlayer?.textChannel) {
                     setTimeout(async () => {
                         if (msg?.deletable) await msg.delete();
-                    }, 5000);
+                    }, 5_000);
                 }
                 dispatcher.destroy();
-            } catch (e) {
-                this.container.client.logger.error(e);
+            } catch (error) {
+                this.container.client.logger.error(error);
             }
         }
 
@@ -59,7 +60,7 @@ export class VoiceStateUpdateEvent extends Listener {
         if (queueVCId && member?.id === botID && oldID === queueVCId && newID !== queueVCId && newID !== undefined) {
             if (!newVCMembers) return undefined;
             if (newVCMembers.size === 0 && dispatcher.timeout === null) this.doTimeout(newVCMembers, dispatcher);
-            else if (newVCMembers.size !== 0 && dispatcher.timeout !== null) this.resumeTimeout(newVCMembers, dispatcher);
+            else if (newVCMembers.size > 0 && dispatcher.timeout !== null) this.resumeTimeout(newVCMembers, dispatcher);
         }
 
         // Handle when user leaves voice channel
@@ -84,7 +85,7 @@ export class VoiceStateUpdateEvent extends Listener {
 
     private doTimeout(vcMembers: Collection<Snowflake, GuildMember>, dispatcher: Dispatcher): any {
         try {
-            if (vcMembers.size !== 0) return undefined;
+            if (vcMembers.size > 0) return undefined;
             clearTimeout(dispatcher.timeout!);
             dispatcher.timeout = null;
             void dispatcher.embedPlayer?.update();
@@ -98,12 +99,12 @@ export class VoiceStateUpdateEvent extends Listener {
                         Util.createEmbed("error", `**${duration}** have passed and there is no one who joins my voice channel, the queue was deleted.`)
                             .setTitle("⏹ Queue deleted.")
                     ]
-                }).catch(e => this.container.client.logger.error(e));
+                }).catch(error => this.container.client.logger.error(error));
                 dispatcher.destroy();
                 if (dispatcher.embedPlayer?.textChannel) {
                     setTimeout(async () => {
                         if ((msg as Message | undefined)?.deletable) await (msg as Message).delete();
-                    }, 5000);
+                    }, 5_000);
                 }
             }, deleteQueueTimeout);
             dispatcher.textChannel.send({
@@ -114,8 +115,8 @@ If there's no one who joins my voice channel in the next **${duration}**, the qu
                     `)
                         .setTitle("⏸ Queue paused.")
                 ]
-            }).then(m => dispatcher.oldVoiceStateUpdateMessage = m.id).catch(e => this.container.client.logger.error(e));
-        } catch (e) { this.container.client.logger.error(e); }
+            }).then(m => dispatcher.oldVoiceStateUpdateMessage = m.id).catch(error => this.container.client.logger.error(error));
+        } catch (error) { this.container.client.logger.error(error); }
     }
 
     private resumeTimeout(vcMembers: Collection<Snowflake, GuildMember>, dispatcher: Dispatcher): any {
@@ -127,7 +128,7 @@ If there's no one who joins my voice channel in the next **${duration}**, the qu
                 dispatcher.oldVoiceStateUpdateMessage = null;
                 void dispatcher.embedPlayer?.update();
                 dispatcher.player.setPaused(false);
-            } catch (e) { this.container.client.logger.error(e); }
+            } catch (error) { this.container.client.logger.error(error); }
         }
     }
 }

@@ -1,7 +1,8 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { Events, Listener, MessageCommand, MessageCommandContext } from "@sapphire/framework";
-import { Message } from "discord.js";
-import { prefix } from "../../config";
+import type { MessageCommand, MessageCommandContext } from "@sapphire/framework";
+import { Events, Listener } from "@sapphire/framework";
+import type { Message } from "discord.js";
+import { prefix } from "../../config.js";
 
 @ApplyOptions<Listener.Options>({
     event: "messageCreate"

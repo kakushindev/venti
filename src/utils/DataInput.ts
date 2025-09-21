@@ -1,5 +1,4 @@
-/* eslint-disable no-mixed-operators */
-import { TextDecoder } from "util";
+import { TextDecoder } from "node:util";
 
 export default class DataInput {
     private pos = 0;

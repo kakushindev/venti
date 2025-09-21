@@ -1,16 +1,18 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { ApplicationCommandRegistry, Args, Command, RegisterBehavior } from "@sapphire/framework";
-import { ButtonInteraction, CommandInteraction, Message } from "discord.js";
-import { devGuilds, isDev } from "../../config";
-import { CommandContext } from "../../structures/CommandContext";
-import { Util } from "../../utils/Util";
+import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
+import { Command, RegisterBehavior } from "@sapphire/framework";
+import type { ChatInputCommandInteraction, Message } from "discord.js";
+import { ButtonInteraction } from "discord.js";
+import { devGuilds, isDev } from "../../config.js";
+import { CommandContext } from "../../structures/CommandContext.js";
+import { Util } from "../../utils/Util.js";
 
 @ApplyOptions<Command.Options>({
     aliases: [],
     name: "resume",
     description: "Resume current playback",
     preconditions: ["isPlayerPlaying", "memberInVoice", "memberVoiceJoinable", "memberInSameVoice"],
-    requiredClientPermissions: ["EMBED_LINKS"]
+    requiredClientPermissions: ["EmbedLinks"]
 })
 export class ResumeCommand extends Command {
     public override registerApplicationCommands(registry: ApplicationCommandRegistry): void {
@@ -24,11 +26,11 @@ export class ResumeCommand extends Command {
         });
     }
 
-    public async chatInputRun(interaction: CommandInteraction<"cached">): Promise<any> {
+    public async chatInputRun(interaction: ChatInputCommandInteraction<"cached">): Promise<any> {
         return this.run(new CommandContext(interaction));
     }
 
-    public messageRun(message: Message, args: Args): Promise<any> {
+    public async messageRun(message: Message, args: Args): Promise<any> {
         return this.run(new CommandContext(message, args));
     }
 

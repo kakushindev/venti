@@ -1,30 +1,31 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { ApplicationCommandRegistry, Args, Command, RegisterBehavior } from "@sapphire/framework";
-import { ApplicationCommandOptionData, CommandInteraction, Message, MessageActionRow, MessageButton, TextChannel } from "discord.js";
-import { ApplicationCommandOptionTypes } from "discord.js/typings/enums";
-import { devGuilds, isDev, prefix } from "../../config";
-import { CommandContext } from "../../structures/CommandContext";
-import { EmbedPlayer } from "../../utils/EmbedPlayer";
-import { Util } from "../../utils/Util";
+import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
+import { Command, RegisterBehavior } from "@sapphire/framework";
+import { ApplicationCommandOptionType, ButtonStyle, GuildCacheMessage, type ApplicationCommandOptionData, type ChatInputCommandInteraction, type Message, type TextChannel } from "discord.js";
+import { devGuilds, isDev, prefix } from "../../config.js";
+import { CommandContext } from "../../structures/CommandContext.js";
+import { EmbedPlayer } from "../../utils/EmbedPlayer.js";
+import { Util } from "../../utils/Util.js";
+import { ActionRowBuilder, ButtonBuilder } from "@discordjs/builders";
 
 @ApplyOptions<Command.Options>({
     aliases: [],
     name: "set",
     preconditions: ["isInsideRequester"],
     description: "Customize bot's settings",
-    requiredUserPermissions: ["MANAGE_GUILD"],
-    requiredClientPermissions: ["EMBED_LINKS"]
+    requiredUserPermissions: ["ManageGuild"],
+    requiredClientPermissions: ["EmbedLinks"]
 })
 export class SettingCommand extends Command {
     private readonly commands: ApplicationCommandOptionData[] = [
         {
             name: "requester",
-            type: ApplicationCommandOptionTypes.SUB_COMMAND,
+            type: ApplicationCommandOptionType.Subcommand,
             description: "Set text channel requester",
             options: [
                 {
                     name: "channel",
-                    type: ApplicationCommandOptionTypes.CHANNEL,
+                    type: ApplicationCommandOptionType.Channel,
                     description: "Text channel to set",
                     required: true
                 }
@@ -32,7 +33,7 @@ export class SettingCommand extends Command {
         },
         {
             name: "removerequester",
-            type: ApplicationCommandOptionTypes.SUB_COMMAND,
+            type: ApplicationCommandOptionType.Subcommand,
             description: "Remove text channel requester"
         }
     ];
@@ -49,12 +50,12 @@ export class SettingCommand extends Command {
         });
     }
 
-    public async chatInputRun(interaction: CommandInteraction<"cached">): Promise<any> {
+    public async chatInputRun(interaction: ChatInputCommandInteraction<"cached">): Promise<any> {
         await interaction.deferReply();
         return this.run(interaction.options.getSubcommand(true), new CommandContext(interaction));
     }
 
-    public async messageRun(message: Message, args: Args): Promise<any> {
+    public async messageRun(message: GuildCacheMessage<"cached">, args: Args): Promise<any> {
         const cmd = await args.pickResult("string");
         const value = cmd.unwrapOr(undefined);
         const validCommands = this.commands.map(x => x.name);
@@ -73,7 +74,7 @@ export class SettingCommand extends Command {
             case "requester": {
                 const channelArgs = await ctx.args?.pick("channel");
                 let channel = ctx.options?.getChannel("channel", true);
-                if ((!channelArgs?.isText() && !ctx.options) || (!ctx.args && !channel?.isText())) {
+                if ((!channelArgs?.isTextBased() && !ctx.options) || (!ctx.args && !channel?.isTextBased())) {
                     return ctx.send({
                         embeds: [
                             Util.createEmbed("error", "Please mention a valid **text channel**")
@@ -88,8 +89,8 @@ export class SettingCommand extends Command {
                     }
                 });
                 const oldRequester = ctx.context.guild!.channels.cache.get(data.requester_channel!);
-                if (oldRequester?.isText()) {
-                    const message = await oldRequester.messages.fetch(data.requester_message!).catch(() => undefined);
+                if (oldRequester?.isTextBased()) {
+                    const message = await oldRequester.messages.fetch(data.requester_message!).catch(() => {});
                     if (message) {
                         return ctx.send({
                             // eslint-disable-next-line @typescript-eslint/no-base-to-string
@@ -97,43 +98,53 @@ export class SettingCommand extends Command {
                         });
                     }
                 }
-                if (!channel.permissionsFor(this.container.client.user!.id)?.has(["SEND_MESSAGES", "ATTACH_FILES"])) {
+                if (!channel.permissionsFor(this.container.client.user!.id)?.has(["SendMessages", "AttachFiles"])) {
                     return ctx.send({
                         embeds: [Util.createEmbed("error", "I need these permissions to make requester channel: `SEND_MESSAGES`, `ATTACH_FILES`")]
                     });
                 }
-                if (channel.isText()) {
+                if (channel.isTextBased()) {
                     data.requester_channel = channel.id;
                     const msg = await channel.send({
                         embeds: [
                             EmbedPlayer.generateDefaultEmbed(ctx.context.guild!, data.prefix ?? prefix)
                         ],
                         components: [
-                            new MessageActionRow()
+                            new ActionRowBuilder<ButtonBuilder>()
                                 .addComponents(
-                                    new MessageButton()
+                                    new ButtonBuilder()
                                         .setCustomId("player_resumepause")
-                                        .setEmoji("⏯")
-                                        .setStyle("SECONDARY"),
-                                    new MessageButton()
+                                        .setEmoji({
+                                            name: "▶️"
+                                        })
+                                        .setStyle(ButtonStyle.Secondary),
+                                    new ButtonBuilder()
                                         .setCustomId("player_skip")
-                                        .setEmoji("⏭")
-                                        .setStyle("SECONDARY"),
-                                    new MessageButton()
+                                        .setEmoji({
+                                            name: "⏭"
+                                        })
+                                        .setStyle(ButtonStyle.Secondary),
+                                    new ButtonBuilder()
                                         .setCustomId("player_loop")
-                                        .setEmoji("🔁")
-                                        .setStyle("SECONDARY"),
-                                    new MessageButton()
+                                        .setEmoji({
+                                            name: "🔁"
+                                        })
+                                        .setStyle(ButtonStyle.Secondary),
+                                    new ButtonBuilder()
                                         .setCustomId("player_stop")
-                                        .setEmoji("⏹")
-                                        .setStyle("DANGER"),
-                                    new MessageButton()
+                                        .setEmoji({
+                                            name: "⏹"
+                                        })
+                                        .setStyle(ButtonStyle.Danger),
+                                    new ButtonBuilder()
                                         .setCustomId("player_shuffle")
-                                        .setEmoji("🔀")
-                                        .setStyle("SUCCESS")
+                                        .setEmoji({
+                                            name: "🔀"
+                                        })
+                                        .setStyle(ButtonStyle.Success)
                                 )
                         ]
-                    }).catch((e: Error) => ({ error: e.message }));
+                    }).catch((error: Error) => ({ error: error.message }));
                     if ("error" in msg) {
                         return ctx.send({
                             embeds: [

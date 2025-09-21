@@ -1,16 +1,17 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { ApplicationCommandRegistry, Args, Command, RegisterBehavior } from "@sapphire/framework";
-import { CommandInteraction, Message } from "discord.js";
-import { devGuilds, isDev } from "../../config";
-import { CommandContext } from "../../structures/CommandContext";
-import { Util } from "../../utils/Util";
+import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
+import { Command, RegisterBehavior } from "@sapphire/framework";
+import { ApplicationCommandOptionType, type ChatInputCommandInteraction, type Message } from "discord.js";
+import { devGuilds, isDev } from "../../config.js";
+import { CommandContext } from "../../structures/CommandContext.js";
+import { Util } from "../../utils/Util.js";
 
 @ApplyOptions<Command.Options>({
     aliases: [],
     name: "volume",
     description: "Change current playback volume",
     preconditions: ["isPlayerPlaying", "memberInVoice", "memberVoiceJoinable", "memberInSameVoice"],
-    requiredClientPermissions: ["EMBED_LINKS"]
+    requiredClientPermissions: ["EmbedLinks"]
 })
 export class VolumeCommand extends Command {
     public override registerApplicationCommands(registry: ApplicationCommandRegistry): void {
@@ -20,9 +21,10 @@ export class VolumeCommand extends Command {
             options: [
                 {
                     name: "volume",
-                    description: "Volume to set",
-                    type: "INTEGER",
-                    required: true
+                    description: "Volume to set (1 - 100)",
+                    type: ApplicationCommandOptionType.Integer,
+                    maxValue: 100,
+                    minValue: 1
                 }
             ]
         }, {
@@ -32,11 +34,11 @@ export class VolumeCommand extends Command {
         });
     }
 
-    public async chatInputRun(interaction: CommandInteraction<"cached">): Promise<any> {
+    public async chatInputRun(interaction: ChatInputCommandInteraction<"cached">): Promise<any> {
         return this.run(new CommandContext(interaction));
     }
 
-    public messageRun(message: Message, args: Args): Promise<any> {
+    public async messageRun(message: Message, args: Args): Promise<any> {
         return this.run(new CommandContext(message, args));
     }
 
@@ -59,7 +61,7 @@ export class VolumeCommand extends Command {
                 ]
             });
         }
-        dispatcher?.player?.setVolume(volume / 100);
+        dispatcher?.player?.setGlobalVolume(volume / 100);
         await ctx.send({
             embeds: [
                 Util.createEmbed("success", `🔊 **|** Changed current volume to ${volume}%`)

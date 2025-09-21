@@ -1,13 +1,14 @@
-import { Collection } from "discord.js";
-import { lavalink, lavalinkRest } from "../config";
-import { DispatcherOptions } from "../typings";
-import { Util } from "../utils/Util";
-import { Dispatcher } from "./Dispatcher";
-import { Venti } from "./Venti";
-import got from "got";
-import { Connectors, LavalinkResponse, Node, Shoukaku } from "shoukaku";
-import { LavalinkSource } from "lavalink-api-types";
 import { cast } from "@sapphire/utilities";
+import { Collection } from "discord.js";
+import got from "got";
+import { V4 } from "lavalink-api-types";
+import type { LavalinkResponse, Node } from "shoukaku";
+import { Connectors, Shoukaku } from "shoukaku";
+import { lavalink, lavalinkRest } from "../config.js";
+import type { DispatcherOptions } from "../typings/index.js";
+import { Util } from "../utils/Util.js";
+import { Dispatcher } from "./Dispatcher.js";
+import type { Venti } from "./Venti.js";
 
 export class ShoukakuHandler extends Shoukaku {
     public readonly queue = new Collection<string, Dispatcher>();
@@ -22,18 +23,18 @@ export class ShoukakuHandler extends Shoukaku {
         return this.client.shoukaku.queue.get(options.guild.id)!;
     }
 
-    public static getProvider(query: string): LavalinkSource | undefined {
+    public static getProvider(query: string): V4.LavalinkSource | undefined {
         if (Util.isValidURL(query)) return undefined;
-        return "youtube";
+        return V4.LavalinkSource.Youtube;
     }
 
-    public static async restResolve(node: Node, identifier: string, search?: LavalinkSource): Promise<LavalinkResponse | { error: string }> {
+    public static async restResolve(node: Node, identifier: string, search?: V4.LavalinkSource): Promise<LavalinkResponse | { error: string; }> {
         let result;
         try {
-            const searchTypes: Record<LavalinkSource, string> = { soundcloud: "scsearch:", youtube: "ytsearch:", youtubemusic: "ytmsearch:" };
+            const searchTypes: Record<string, string> = { soundcloud: "scsearch:", youtube: "ytsearch:", youtubemusic: "ytmsearch:" };
             // @ts-expect-error Rest#url is private
             const url = new URL(lavalinkRest.host ?? cast<string>(node.rest.url));
-            url.pathname = "/loadtracks";
+            url.pathname = "/v4/loadtracks";
             const response = await got.get(url.toString(), {
                 searchParams: {
                     identifier: `${searchTypes[search!] || ""}${identifier}`
@@ -42,7 +43,7 @@ export class ShoukakuHandler extends Shoukaku {
                     // @ts-expect-error Rest#auth is private
                     Authorization: lavalinkRest.auth ?? node.rest.auth
                 }
-            }).json<LavalinkResponse>().catch((e: Error) => ({ error: e.message }));
+            }).json<LavalinkResponse>().catch((error: Error) => ({ error: error.message }));
             if ("error" in response) result = response;
             return response;
         } catch (error) {

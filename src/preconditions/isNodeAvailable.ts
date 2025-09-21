@@ -1,5 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { Precondition, PreconditionOptions, PreconditionResult } from "@sapphire/framework";
+import type { PreconditionOptions, PreconditionResult } from "@sapphire/framework";
+import { Precondition } from "@sapphire/framework";
 
 @ApplyOptions<PreconditionOptions>({
     name: "isNodeAvailable"
@@ -14,6 +15,7 @@ export class isNodeAvailable extends Precondition {
     }
 
     private precondition(): PreconditionResult {
-        return [...this.container.client.shoukaku.nodes.values()].some(n => n.state === 1) ? this.ok() : this.error({ message: "There's no node available" });
+        // eslint-disable-next-line typescript/no-unsafe-enum-comparison
+        return this.container.client.shoukaku.getIdealNode() ? this.ok() : this.error({ message: "There's no node available" });
     }
 }

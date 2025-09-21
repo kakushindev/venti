@@ -1,13 +1,14 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { Precondition, PreconditionOptions, PreconditionResult } from "@sapphire/framework";
-import { CommandInteraction, Message } from "discord.js";
-import { CommandContext } from "../structures/CommandContext";
+import type { PreconditionOptions, PreconditionResult } from "@sapphire/framework";
+import { Precondition } from "@sapphire/framework";
+import type { ChatInputCommandInteraction, Message } from "discord.js";
+import { CommandContext } from "../structures/CommandContext.js";
 
 @ApplyOptions<PreconditionOptions>({
     name: "isPlayerPlaying"
 })
 export class isPlayerPlaying extends Precondition {
-    public chatInputRun(interaction: CommandInteraction<"cached">): PreconditionResult {
+    public chatInputRun(interaction: ChatInputCommandInteraction<"cached">): PreconditionResult {
         return this.precondition(new CommandContext(interaction));
     }
 

@@ -1,6 +1,7 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { ChatInputCommand, ChatInputCommandContext, Events, Listener } from "@sapphire/framework";
-import { CommandInteraction, Interaction } from "discord.js";
+import type { ChatInputCommand, ChatInputCommandContext } from "@sapphire/framework";
+import { Events, Listener } from "@sapphire/framework";
+import type { ChatInputCommandInteraction, Interaction } from "discord.js";
 
 @ApplyOptions<Listener.Options>({
     event: "interactionCreate"
@@ -19,7 +20,7 @@ export class InteractionCreateListener extends Listener {
             if (!dispatcher?.player?.paused && id[1] === "resumepause") id[1] = "pause";
             const command = this.container.stores.get("commands").get(id[1]) as ChatInputCommand | undefined;
             if (!command) return;
-            const preconditionsResult = await command.preconditions.chatInputRun(interaction as unknown as CommandInteraction, command, { command });
+            const preconditionsResult = await command.preconditions.chatInputRun(interaction as unknown as ChatInputCommandInteraction, command, { command });
             const context: ChatInputCommandContext = {
                 commandName: command.name,
                 commandId: interaction.customId
@@ -34,7 +35,7 @@ export class InteractionCreateListener extends Listener {
                 dispatcher!.loopState = dispatcher?.loopState === 2 ? 0 : toChange;
                 return dispatcher?.embedPlayer?.update();
             }
-            return command.chatInputRun(interaction as unknown as CommandInteraction, context);
+            return command.chatInputRun(interaction as unknown as ChatInputCommandInteraction, context);
         }
     }
 }

@@ -1,11 +1,12 @@
-import { Snowflake, VoiceState } from "discord.js";
-import { LavalinkTrack } from "lavalink-api-types";
-import { Player, TrackEndEvent, TrackExceptionEvent } from "shoukaku";
-import { DispatcherOptions } from "../typings";
-import { EmbedPlayer } from "../utils/EmbedPlayer";
-import { Util } from "../utils/Util";
-import { Track } from "./Track";
-import { Venti } from "./Venti";
+import type { Guild, Snowflake, TextChannel, VoiceChannel, VoiceState } from "discord.js";
+import type { Player, TrackEndEvent, TrackExceptionEvent } from "shoukaku";
+import type { DispatcherOptions } from "../typings/index.js";
+import { EmbedPlayer } from "../utils/EmbedPlayer.js";
+import { Util } from "../utils/Util.js";
+import { Track } from "./Track.js";
+import type { Venti } from "./Venti.js";
+import type { Track as ShoukakuTrack } from "shoukaku";
+import { TrackEndReason } from "lavalink-api-types/v4";
 
 const nonEnum = { enumerable: false };
 
@@ -38,9 +39,9 @@ export class Queue extends Array<Track> {
 }
 
 export class Dispatcher {
-    public readonly guild = this.options.guild;
-    public readonly textChannel = this.options.textChannel;
-    public readonly voiceChannel = this.options.voiceChannel;
+    public readonly guild!: Guild;
+    public readonly textChannel!: TextChannel;
+    public readonly voiceChannel!: VoiceChannel;
     public readonly queue = new Queue();
     public timeout: NodeJS.Timeout | null = null;
     public votes: string[] = [];
@@ -52,20 +53,26 @@ export class Dispatcher {
     private _lastVoiceStateUpdateMessageID: Snowflake | null = null;
 
     public constructor(public readonly client: Venti, public readonly options: DispatcherOptions) {
+        Object.assign(this, {
+            guild: options.guild,
+            textChannel: options.textChannel,
+            voiceChannel: options.voiceChannel
+        });
+
         Object.defineProperties(this, {
             _lastMusicMessageID: nonEnum,
             _lastVoiceStateUpdateMessageID: nonEnum
         });
     }
 
-    public async connect(): Promise<{ success: boolean; error?: string }> {
+    public async connect(): Promise<{ success: boolean; error?: string; }> {
         if (this.player) return { success: true };
-        const response = await this.client.shoukaku.getNode()!.joinChannel({
+        const response = await this.client.shoukaku.joinVoiceChannel({
             guildId: this.guild.id,
             shardId: this.guild.shardId,
             channelId: this.voiceChannel.id,
             deaf: true
-        }).catch((e: Error) => ({ error: e.message }));
+        }).catch((error: Error) => ({ error: error.message }));
         if ("error" in response) return { success: false, error: response.error };
         this.embedPlayer = new EmbedPlayer(this);
         await this.embedPlayer.fetch();
@@ -75,15 +82,15 @@ export class Dispatcher {
     }
 
     public async addTracks(
-        data: { track: LavalinkTrack; requester: string }[]
-    ): Promise<{ duplicate: string[]; overload: string[]; success: string[]; queueLimit: number | null }> {
+        data: { track: ShoukakuTrack; requester: string; }[]
+    ): Promise<{ duplicate: string[]; overload: string[]; success: string[]; queueLimit: number | null; }> {
         const settings = await this.client.databases.guild.get(this.guild.id, {
             select: {
                 allow_duplicate: true,
                 max_queue: true
             }
         });
-        const added: { duplicate: string[]; overload: string[]; success: string[]; queueLimit: number | null } = {
+        const added: { duplicate: string[]; overload: string[]; success: string[]; queueLimit: number | null; } = {
             duplicate: [],
             overload: [],
             success: [],
@@ -91,21 +98,21 @@ export class Dispatcher {
         };
         for (const { track, requester } of data) {
             if (!settings.allow_duplicate && this.queue.some(x => x.info.identifier === track.info.identifier)) {
-                added.duplicate.push(track.track);
+                added.duplicate.push(track.encoded);
                 continue;
             }
             if (settings.max_queue && !isNaN(settings.max_queue) && this.queue.length >= settings.max_queue) {
-                added.overload.push(track.track);
+                added.overload.push(track.encoded);
                 continue;
             }
             this.queue.push(new Track(track, requester));
-            added.success.push(track.track);
+            added.success.push(track.encoded);
         }
         return added;
     }
 
     public destroy(): void {
-        if (this.player) this.player.connection.disconnect();
+        if (this.player) this.player.destroy();
         this.oldMusicMessage = null;
         this.oldVoiceStateUpdateMessage = null;
         Object.assign(this, { queue: [] });
@@ -125,16 +132,16 @@ export class Dispatcher {
             }
         });
         player.on("end", async (data: TrackEndEvent) => {
-            if (data.reason === "REPLACED") return;
+            if (data.reason === TrackEndReason.Replaced) return;
             this.queue.previousTrack = this.queue[0];
             this.queue.shift();
-            if (["LOAD_FAILED", "CLEAN_UP"].includes(data.reason)) {
-                if (this.queue.length) return player.playTrack({ track: this.queue[0].base64 });
-            }
+            if (["loadFailed", "cleanup"].includes(data.reason) && this.queue.length > 0) return player.playTrack({ track: { encoded: this.queue[0].base64 } });
             if (this.loopState === LoopType.ALL) this.queue.push(this.queue.previousTrack);
             if (this.loopState === LoopType.ONE) this.queue.unshift(this.queue.previousTrack);
             void this.embedPlayer?.update();
-            if (this.queue.length) return player.playTrack({ track: this.queue[0].base64 });
+            if (this.queue.length > 0) return player.playTrack({ track: {
+                encoded: this.queue[0].base64
+            } });
             if (!this.embedPlayer?.message) {
                 await this.textChannel.send({
                     embeds: [
@@ -143,7 +150,7 @@ export class Dispatcher {
                     ]
                 }).then(x => x.id);
             }
-            return this.destroy();
+            this.destroy();
         });
         player.on("exception", async (data: TrackExceptionEvent) => {
             this.oldExceptionMessage = await this.textChannel.send({
@@ -152,15 +159,15 @@ export class Dispatcher {
                 ]
             }).then(x => x.id);
             if (this.embedPlayer?.textChannel) {
-                setTimeout(() => this.oldExceptionMessage = null, 5000);
+                setTimeout(() => this.oldExceptionMessage = null, 5_000);
             }
         });
     }
 
     public get listeners(): VoiceState[] {
-        if (this.guild.me?.voice.channelId && this.player) {
-            const states = this.guild.voiceStates.cache.filter(x => x.channelId === this.player?.connection.channelId && x.id !== this.client.user!.id);
-            return Array.from(states.values());
+        if (this.guild.members.me?.voice.channelId && this.player) {
+            const states = this.guild.voiceStates.cache.filter(x => x.channelId === this.voiceChannel.id && x.id !== this.client.user!.id);
+            return [...states.values()];
         }
         return [];
     }
@@ -173,7 +180,7 @@ export class Dispatcher {
         if (this._lastMusicMessageID !== null) {
             this.textChannel.messages.fetch(this._lastMusicMessageID)
                 .then(m => m.delete())
-                .catch(e => this.client.logger.error(e));
+                .catch(error => this.client.logger.error(error));
         }
         this._lastMusicMessageID = id;
     }
@@ -186,7 +193,7 @@ export class Dispatcher {
         if (this._lastVoiceStateUpdateMessageID !== null) {
             this.textChannel.messages.fetch(this._lastVoiceStateUpdateMessageID)
                 .then(m => m.delete())
-                .catch(e => this.client.logger.error(e));
+                .catch(error => this.client.logger.error(error));
         }
         this._lastVoiceStateUpdateMessageID = id;
     }
@@ -199,7 +206,7 @@ export class Dispatcher {
         if (this._lastExceptionMessageID !== null) {
             this.textChannel.messages.fetch(this._lastExceptionMessageID)
                 .then(m => m.delete())
-                .catch(e => this.client.logger.error(e));
+                .catch(error => this.client.logger.error(error));
         }
         this._lastExceptionMessageID = id;
     }

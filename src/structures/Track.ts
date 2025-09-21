@@ -1,7 +1,8 @@
-import { Util } from "discord.js";
+import { Buffer } from "node:buffer";
 import { decode } from "@lavalink/encoding";
-import DataInput from "../utils/DataInput";
-import { LavalinkTrack } from "lavalink-api-types";
+import { escapeMarkdown } from "discord.js";
+import DataInput from "../utils/DataInput.js";
+import type { Track as ShoukakuTrack } from "shoukaku";
 
 export class DecodeTrack {
     public title: string;
@@ -16,7 +17,7 @@ export class DecodeTrack {
 
     public constructor(buffer: Uint8Array) {
         const input = new DataInput(buffer);
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        // eslint-disable-next-line typescript/no-unused-expressions
         input.readInt() >> 30;
         input.readByte();
 
@@ -34,10 +35,13 @@ export class DecodeTrack {
 
 export class Track {
     public raw!: DecodeTrack | undefined;
-    public base64 = this.track.track;
-    public info = this.track.info;
-    public displayTitle = Util.escapeMarkdown(this.info.title.length > 45 ? `${this.info.title.substring(0, 45)}...` : this.info.title);
-    public constructor(public readonly track: LavalinkTrack, public readonly requester: string) {
+    public base64!: string;
+    public info!: ShoukakuTrack["info"];
+    public displayTitle!: string;
+    public constructor(public readonly track: ShoukakuTrack, public readonly requester: string) {
+        this.info = track.info;
+        this.base64 = track.encoded;
+        this.displayTitle = escapeMarkdown(this.info.title.length > 45 ? `${this.info.title.slice(0, 45)}...` : this.info.title);
         try {
             this.raw = new DecodeTrack(new Uint8Array(Buffer.from(this.base64, "base64")));
         } catch {
@@ -50,7 +54,7 @@ export class Track {
     }
 
     public get displayThumbnail(): string {
-        if (this.raw?.artworkUrl) return this.raw.artworkUrl;
+        if (this.raw?.artworkUrl !== null && this.raw?.artworkUrl !== undefined) return this.raw.artworkUrl;
         return `https://i.ytimg.com/vi/${this.info.identifier}/maxresdefault.jpg`;
     }
 }

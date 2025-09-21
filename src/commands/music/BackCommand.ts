@@ -1,16 +1,17 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { ApplicationCommandRegistry, Args, Command, RegisterBehavior } from "@sapphire/framework";
-import { CommandInteraction, Message } from "discord.js";
-import { devGuilds, isDev } from "../../config";
-import { CommandContext } from "../../structures/CommandContext";
-import { Util } from "../../utils/Util";
+import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
+import { Command, RegisterBehavior } from "@sapphire/framework";
+import type { ChatInputCommandInteraction, Message } from "discord.js";
+import { devGuilds, isDev } from "../../config.js";
+import { CommandContext } from "../../structures/CommandContext.js";
+import { Util } from "../../utils/Util.js";
 
 @ApplyOptions<Command.Options>({
     aliases: [],
     name: "back",
     description: "Play previous track",
     preconditions: ["isPlayerPlaying", "memberInVoice", "memberVoiceJoinable", "memberInSameVoice"],
-    requiredClientPermissions: ["EMBED_LINKS"]
+    requiredClientPermissions: ["EmbedLinks"]
 })
 export class SkipCommand extends Command {
     public override registerApplicationCommands(registry: ApplicationCommandRegistry): void {
@@ -24,11 +25,11 @@ export class SkipCommand extends Command {
         });
     }
 
-    public async chatInputRun(interaction: CommandInteraction<"cached">): Promise<any> {
+    public async chatInputRun(interaction: ChatInputCommandInteraction<"cached">): Promise<any> {
         return this.run(new CommandContext(interaction));
     }
 
-    public messageRun(message: Message, args: Args): Promise<any> {
+    public async messageRun(message: Message, args: Args): Promise<any> {
         return this.run(new CommandContext(message, args));
     }
 
@@ -37,7 +38,7 @@ export class SkipCommand extends Command {
         if (dispatcher.embedPlayer?.textChannel?.id === ctx.context.channelId) ctx.isInsideRequesterChannel = true;
 
         const previous = dispatcher.queue.previousTrack;
-        if (typeof previous === "undefined") {
+        if (previous === undefined) {
             return ctx.send({
                 embeds: [
                     Util.createEmbed("error", "There is no previous track", true)

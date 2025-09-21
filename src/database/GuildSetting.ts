@@ -1,11 +1,11 @@
-import { guilds, Prisma } from "@prisma/client";
-import { Snowflake } from "discord-api-types/globals";
-import { Venti } from "../structures/Venti";
+import type { guilds, Prisma } from "@prisma/client";
+import type { Snowflake } from "discord-api-types/globals";
+import type { Venti } from "../structures/Venti.js";
 
 export class GuildSetting {
     public constructor(public readonly client: Venti) {}
 
-    public async fetchGuildRequester(id: Snowflake): Promise<{ channel: string | null | undefined; message: string | null | undefined }> {
+    public async fetchGuildRequester(id: Snowflake): Promise<{ channel: string | null | undefined; message: string | null | undefined; }> {
         const data = await this.client.prisma.guilds.findFirst({
             select: {
                 requester_channel: true,
@@ -27,7 +27,7 @@ export class GuildSetting {
                 id
             },
             ...options
-        }).catch(e => this.client.logger.error(e));
+        }).catch(error => this.client.logger.error(error));
         if (!data) {
             data = await this.client.prisma.guilds.create({
                 data: {

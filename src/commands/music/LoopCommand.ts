@@ -1,34 +1,34 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { ApplicationCommandRegistry, Args, Command, RegisterBehavior } from "@sapphire/framework";
-import { ApplicationCommandOptionData, CommandInteraction, Message } from "discord.js";
-import { ApplicationCommandOptionTypes } from "discord.js/typings/enums";
-import { devGuilds, isDev } from "../../config";
-import { CommandContext } from "../../structures/CommandContext";
-import { LoopType } from "../../structures/Dispatcher";
-import { Util } from "../../utils/Util";
+import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
+import { Command, RegisterBehavior } from "@sapphire/framework";
+import { ApplicationCommandOptionType, type ApplicationCommandOptionData, type ChatInputCommandInteraction, type GuildCacheMessage, type Message } from "discord.js";
+import { devGuilds, isDev } from "../../config.js";
+import { CommandContext } from "../../structures/CommandContext.js";
+import { LoopType } from "../../structures/Dispatcher.js";
+import { Util } from "../../utils/Util.js";
 
 @ApplyOptions<Command.Options>({
     aliases: [],
     name: "loop",
     preconditions: ["isPlayerPlaying", "memberInVoice", "memberVoiceJoinable", "memberInSameVoice"],
     description: "Customize loop mode for current queue",
-    requiredClientPermissions: ["EMBED_LINKS"]
+    requiredClientPermissions: ["EmbedLinks"]
 })
 export class LoopCommand extends Command {
     private readonly commands: ApplicationCommandOptionData[] = [
         {
             name: "queue",
-            type: ApplicationCommandOptionTypes.SUB_COMMAND,
+            type: ApplicationCommandOptionType.Subcommand,
             description: "Loop current queue"
         },
         {
             name: "track",
-            type: ApplicationCommandOptionTypes.SUB_COMMAND,
+            type: ApplicationCommandOptionType.Subcommand,
             description: "Loop current track (single)"
         },
         {
             name: "disable",
-            type: ApplicationCommandOptionTypes.SUB_COMMAND,
+            type: ApplicationCommandOptionType.Subcommand,
             description: "Disable loop"
         }
     ];
@@ -45,11 +45,11 @@ export class LoopCommand extends Command {
         });
     }
 
-    public async chatInputRun(interaction: CommandInteraction<"cached">): Promise<any> {
+    public async chatInputRun(interaction: ChatInputCommandInteraction<"cached">): Promise<any> {
         return this.run(interaction.options.getSubcommand(true), new CommandContext(interaction));
     }
 
-    public async messageRun(message: Message, args: Args): Promise<any> {
+    public async messageRun(message: GuildCacheMessage<"cached">, args: Args): Promise<any> {
         const cmd = await args.pickResult("string");
         const value = cmd.unwrapOr(undefined);
         const validCommands = this.commands.map(x => x.name);
@@ -63,7 +63,7 @@ export class LoopCommand extends Command {
             if (dispatcher?.embedPlayer?.textChannel?.id === message.channelId) {
                 setTimeout(() => {
                     if (msg.deletable) return msg.delete();
-                }, 5000);
+                }, 5_000);
             }
             return undefined;
         }

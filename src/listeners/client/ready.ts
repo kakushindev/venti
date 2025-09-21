@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Listener } from "@sapphire/framework";
-import { Venti } from "../../structures/Venti";
+import type { Venti } from "../../structures/Venti.js";
 
 @ApplyOptions<Listener.Options>({
     once: true,

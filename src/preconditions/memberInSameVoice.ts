@@ -1,13 +1,14 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { Precondition, PreconditionOptions, PreconditionResult } from "@sapphire/framework";
-import { CommandInteraction, Message } from "discord.js";
-import { CommandContext } from "../structures/CommandContext";
+import type { PreconditionOptions, PreconditionResult } from "@sapphire/framework";
+import { Precondition } from "@sapphire/framework";
+import type { ChatInputCommandInteraction, GuildMember, Message } from "discord.js";
+import { CommandContext } from "../structures/CommandContext.js";
 
 @ApplyOptions<PreconditionOptions>({
     name: "memberInSameVoice"
 })
 export class memberInSameVoice extends Precondition {
-    public chatInputRun(interaction: CommandInteraction<"cached">): PreconditionResult {
+    public chatInputRun(interaction: ChatInputCommandInteraction<"cached">): PreconditionResult {
         return this.precondition(new CommandContext(interaction));
     }
 
@@ -17,15 +18,15 @@ export class memberInSameVoice extends Precondition {
 
     private precondition(ctx: CommandContext): PreconditionResult {
         const dispatcher = this.container.client.shoukaku.queue.get(ctx.context.guildId!);
-        const voiceChannel = ctx.context.member!.voice.channel;
+        const voiceChannel = (ctx.context.member! as GuildMember).voice.channel;
         if (dispatcher) {
-            if (!dispatcher.listeners.length && voiceChannel?.joinable) {
+            if (dispatcher.listeners.length === 0 && voiceChannel?.joinable) {
                 dispatcher.destroy();
                 return this.ok();
             }
             if (
-                ctx.context.guild!.me?.voice.channelId &&
-                ctx.context.guild!.me.voice.channelId !== voiceChannel?.id &&
+                ctx.context.guild!.members.me?.voice.channelId &&
+                ctx.context.guild!.members.me.voice.channelId !== voiceChannel?.id &&
                 dispatcher.listeners.length > 0 && !voiceChannel?.joinable
             ) {
                 // eslint-disable-next-line @typescript-eslint/no-base-to-string

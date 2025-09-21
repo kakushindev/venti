@@ -1,16 +1,17 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { ApplicationCommandRegistry, Args, Command, RegisterBehavior } from "@sapphire/framework";
-import { CommandInteraction, Message } from "discord.js";
-import { devGuilds, isDev } from "../../config";
-import { CommandContext } from "../../structures/CommandContext";
-import { Util } from "../../utils/Util";
+import type { ApplicationCommandRegistry, Args } from "@sapphire/framework";
+import { Command, RegisterBehavior } from "@sapphire/framework";
+import type { ChatInputCommandInteraction, GuildMember, Message } from "discord.js";
+import { devGuilds, isDev } from "../../config.js";
+import { CommandContext } from "../../structures/CommandContext.js";
+import { Util } from "../../utils/Util.js";
 
 @ApplyOptions<Command.Options>({
     aliases: [],
     name: "skip",
     description: "Skip current music",
     preconditions: ["isPlayerPlaying", "memberInVoice", "memberVoiceJoinable", "memberInSameVoice"],
-    requiredClientPermissions: ["EMBED_LINKS"]
+    requiredClientPermissions: ["EmbedLinks"]
 })
 export class SkipCommand extends Command {
     public override registerApplicationCommands(registry: ApplicationCommandRegistry): void {
@@ -24,11 +25,11 @@ export class SkipCommand extends Command {
         });
     }
 
-    public async chatInputRun(interaction: CommandInteraction<"cached">): Promise<any> {
+    public async chatInputRun(interaction: ChatInputCommandInteraction<"cached">): Promise<any> {
         return this.run(new CommandContext(interaction));
     }
 
-    public messageRun(message: Message, args: Args): Promise<any> {
+    public async messageRun(message: Message, args: Args): Promise<any> {
         return this.run(new CommandContext(message, args));
     }
 
@@ -42,16 +43,14 @@ export class SkipCommand extends Command {
                 dj_state: true
             }
         });
-        if (data.dj_state) {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            if (ctx.context.member!.roles.cache.some(x => (data.dj_roles || []).includes(x.id))) {
-                if (!ctx.isInsideRequesterChannel) {
-                    await ctx.send({
-                        embeds: [Util.createEmbed("success", `Skipped **[${dispatcher.queue.currentTrack!.displayTitle}](${dispatcher.queue.currentTrack!.info.uri})**`)]
-                    });
-                }
-                return dispatcher.player?.stopTrack();
+        if (data.dj_state && // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            (ctx.context.member as GuildMember).roles.cache.some(x => (data.dj_roles || []).includes(x.id))) {
+            if (!ctx.isInsideRequesterChannel) {
+                await ctx.send({
+                    embeds: [Util.createEmbed("success", `Skipped **[${dispatcher.queue.currentTrack!.displayTitle}](${dispatcher.queue.currentTrack!.info.uri})**`)]
+                });
             }
+            return dispatcher.player?.stopTrack();
         }
         if (listeners.length > 3 && dispatcher.queue.currentTrack?.requester !== ctx.author.id) {
             if (dispatcher.votes.includes(ctx.author.id)) {

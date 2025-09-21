@@ -1,6 +1,7 @@
 import { ApplyOptions } from "@sapphire/decorators";
-import { Precondition, PreconditionOptions, PreconditionResult } from "@sapphire/framework";
-import { Message } from "discord.js";
+import type { PreconditionOptions, PreconditionResult } from "@sapphire/framework";
+import { Precondition } from "@sapphire/framework";
+import type { Message } from "discord.js";
 import { devs } from "../config.js";
 
 @ApplyOptions<PreconditionOptions>({
