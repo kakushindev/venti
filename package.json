@@ -41,7 +41,7 @@
     "discord-api-types": "^0.37.120",
     "discord.js": "^14.22.1",
     "dotenv": "^16.6.1",
-    "got": "^12.6.1",
+    "got": "^14.5.0",
     "lavalink-api-types": "^2.0.2",
     "pino-pretty": "^9.4.1",
     "pretty-ms": "^8.0.0",
