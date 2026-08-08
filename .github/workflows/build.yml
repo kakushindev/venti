@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    uses: kagchi/workflows/.github/workflows/docker-build.yaml@main
+    uses: kagchi/workflows/.github/workflows/docker-build.yaml@04210c09b633e7f3b191ccf5411966728fb40a4e # main
     permissions:
       packages: write
       contents: read

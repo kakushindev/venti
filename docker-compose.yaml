@@ -1,7 +1,7 @@
 services:
   lavalink:
     # pin the image version to Lavalink v4 and use the alpine variant for a smaller image size
-    image: ghcr.io/lavalink-devs/lavalink:4-alpine
+    image: ghcr.io/lavalink-devs/lavalink:4-alpine@sha256:96be2be7ee50d35a9bd42c8c7b99e2a4b741f09123066c1ebb9e014dd7db204d
     container_name: lavalink
     restart: unless-stopped
     environment:
