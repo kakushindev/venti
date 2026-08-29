@@ -40,7 +40,7 @@
     "@sapphire/utilities": "^3.18.2",
     "discord-api-types": "^0.37.120",
     "discord.js": "^14.22.1",
-    "dotenv": "^16.6.1",
+    "dotenv": "^17.4.2",
     "got": "^12.6.1",
     "lavalink-api-types": "^2.0.2",
     "pino-pretty": "^9.4.1",
