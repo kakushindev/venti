@@ -30,38 +30,38 @@
     "start:dev": "rimraf ./dist && pnpm run compile && node --experimental-specifier-resolution=node --no-warnings dist/main"
   },
   "dependencies": {
-    "@discordjs/builders": "^1.11.3",
+    "@discordjs/builders": "^1.14.1",
     "@lavalink/encoding": "^0.1.2",
-    "@prisma/client": "^6.16.2",
+    "@prisma/client": "^6.19.3",
     "@sapphire/decorators": "^6.2.0",
-    "@sapphire/framework": "^5.3.6",
+    "@sapphire/framework": "^5.5.1",
     "@sapphire/plugin-editable-commands": "^4.0.4",
-    "@sapphire/result": "^2.7.2",
+    "@sapphire/result": "^2.8.0",
     "@sapphire/utilities": "^3.18.2",
-    "discord-api-types": "^0.37.120",
-    "discord.js": "^14.22.1",
+    "discord-api-types": "^0.38.54",
+    "discord.js": "^14.27.0",
     "dotenv": "^16.6.1",
     "got": "^12.6.1",
     "lavalink-api-types": "^2.0.2",
     "pino-pretty": "^9.4.1",
     "pretty-ms": "^8.0.0",
-    "shoukaku": "^4.1.1",
+    "shoukaku": "^4.3.0",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@hazmi35/eslint-config": "^15.2.2",
-    "@tsconfig/node20": "^20.1.6",
-    "@types/node": "^20.19.17",
-    "@typescript-eslint/eslint-plugin": "^8.44.0",
-    "@typescript-eslint/parser": "^8.44.0",
-    "eslint": "^9.36.0",
-    "prisma": "^6.16.2",
+    "@tsconfig/node20": "^20.1.10",
+    "@types/node": "^20.19.43",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/parser": "^8.69.0",
+    "eslint": "^9.39.5",
+    "prisma": "^6.19.3",
     "rimraf": "^3.0.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3"
   },
   "engines": {
-    "node": ">=22.17.0",
-    "npm": ">=7.0.0"
+    "node": ">=22.23.2",
+    "npm": ">=7.24.2"
   },
-  "packageManager": "pnpm@10.17.0+sha512.fce8a3dd29a4ed2ec566fb53efbb04d8c44a0f05bc6f24a73046910fb9c3ce7afa35a0980500668fa3573345bd644644fa98338fa168235c80f4aa17aa17fbef"
+  "packageManager": "pnpm@10.34.5"
 }
