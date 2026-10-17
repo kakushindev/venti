@@ -1,4 +1,4 @@
-FROM ghcr.io/hazmi35/node:22-dev-alpine AS build-stage
+FROM ghcr.io/hazmi35/node:22.23.3-dev-alpine@sha256:e81c055a964a9d8b86d357a5ffd288d703c5d8728175ce0743050ac04da1ccf7 AS build-stage
 
 # Prepare pnpm with corepack (experimental feature)
 RUN corepack enable && corepack prepare pnpm@latest
@@ -22,7 +22,7 @@ RUN pnpm run build
 RUN pnpm prune --production
 
 # Get ready for production
-FROM ghcr.io/hazmi35/node:22-alpine
+FROM ghcr.io/hazmi35/node:22.23.3-alpine@sha256:5f20382c7f644a69e4a40358891194a162241a09c28bb8e303eabea6ef60d3c3
 
 LABEL name="venti"
 LABEL maintainer="Kakushin Devs <hello@kakushin.dev>"
