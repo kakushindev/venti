@@ -15,6 +15,6 @@ on:
 
 jobs:
   docker:
-    uses: ict-neskar/workflows/.github/workflows/code-consistency-check.yaml@main
+    uses: ict-neskar/workflows/.github/workflows/code-consistency-check.yaml@bcf7026f639b543c4e70a8e335a331840a5719fb # main
     secrets: inherit
     
